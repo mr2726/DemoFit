@@ -44,8 +44,9 @@ const productFormSchema = z.object({
   price: z.coerce.number().positive("Price must be a positive number."),
   category: z.enum(["Workout Plan", "Nutrition", "Supplements"]),
   
-  // Workout Plan specific fields
   imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+  
+  // Workout Plan specific fields
   weeks: z.coerce.number().int().min(1).optional(),
   exercises: z.array(exerciseSchema).optional(),
 
@@ -73,12 +74,12 @@ const productFormSchema = z.object({
     path: ["imageUrl"]
 }).refine(data => {
     if (data.category === "Supplements") {
-        return data.stock !== undefined && data.stock !== null;
+        return !!data.imageUrl && data.stock !== undefined && data.stock !== null;
     }
     return true;
 }, {
-    message: "Stock is required for Supplements.",
-    path: ["stock"]
+    message: "Image and Stock are required for Supplements.",
+    path: ["imageUrl"]
 });
 
 
@@ -212,19 +213,30 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
         </div>
 
         {category === 'Supplements' && (
-             <FormField
-                control={form.control}
-                name="stock"
-                render={({ field }) => (
+            <div className="space-y-4">
+                <Separator />
+                <h3 className="text-lg font-medium">Supplement Details</h3>
+                 <FormField control={form.control} name="imageUrl" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Stock</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="100" {...field} value={field.value || ''}/>
-                    </FormControl>
-                    <FormMessage />
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl><Input placeholder="https://placehold.co/600x400" {...field} value={field.value || ''} /></FormControl>
+                        <FormMessage />
                     </FormItem>
-                )}
+                )} />
+                <FormField
+                    control={form.control}
+                    name="stock"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Stock</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="100" {...field} value={field.value || ''}/>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
+            </div>
         )}
         
         {category === 'Workout Plan' && (
