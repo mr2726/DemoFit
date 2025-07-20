@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import Link from "next/link";
 import { Dumbbell, Apple, Package, Star, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -44,7 +45,7 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
                         src={item.imageUrl || "https://placehold.co/600x400"} 
                         alt={item.name} 
                         fill={true} 
-                        objectFit="cover" 
+                        style={{objectFit:"cover"}} 
                         className="rounded-t-lg" 
                         data-ai-hint="fitness product"
                     />
@@ -60,7 +61,9 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-between items-center">
                 <span className="text-2xl font-bold">${item.price.toFixed(2)}</span>
-                <Button>View Details</Button>
+                <Button asChild>
+                    <Link href={`/dashboard/checkout/${item.id}`}>Buy Now</Link>
+                </Button>
             </CardFooter>
         </Card>
     );
