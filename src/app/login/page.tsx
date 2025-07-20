@@ -1,7 +1,15 @@
+'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
+import { auth, db } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48" {...props}>
@@ -13,6 +21,43 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setIsSigningIn(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in Firestore, if not create a document
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: 'user', // default role
+        });
+      }
+
+      router.push('/dashboard');
+    } catch (error) {
+      console.error("Error during Google login:", error);
+      toast({
+        title: "Login Failed",
+        description: "Could not log in with Google. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+        setIsSigningIn(false);
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center">
        <Image 
@@ -31,22 +76,23 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4">
-            <Button variant="outline" asChild>
-                <Link href="/dashboard">
-                    <GoogleIcon className="mr-2 h-5 w-5" />
-                    Login with Google
-                </Link>
+            <Button variant="outline" onClick={handleGoogleLogin} disabled={isSigningIn}>
+              {isSigningIn ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <GoogleIcon className="mr-2 h-5 w-5" />
+              )}
+              Login with Google
             </Button>
             <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or continue with demo</span>
+                    <span className="bg-card px-2 text-muted-foreground">Or continue as guest</span>
                 </div>
             </div>
-            <Button variant="secondary" asChild><Link href="/dashboard">Continue as User</Link></Button>
-            <Button variant="secondary" asChild><Link href="/dashboard?role=admin">Continue as Admin</Link></Button>
+            <Button variant="secondary" asChild><Link href="/dashboard">Continue as Guest</Link></Button>
           </div>
         </CardContent>
       </Card>

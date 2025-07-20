@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2 } from "lucide-react"
 import { Card, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
@@ -63,7 +62,7 @@ const productFormSchema = z.object({
     return true;
 }, {
     message: "Image, duration, and at least one exercise are required for Workout Plans.",
-    path: ["imageUrl"] // You can also target specific fields for the error message
+    path: ["imageUrl"]
 }).refine(data => {
     if (data.category === "Nutrition") {
         return !!data.imageUrl && !!data.totalKcal && !!data.recipes && data.recipes.length > 0;
@@ -83,7 +82,7 @@ const productFormSchema = z.object({
 });
 
 
-type ProductFormValues = z.infer<typeof productFormSchema>
+export type ProductFormValues = z.infer<typeof productFormSchema>
 
 interface ProductFormProps {
     onSubmit: (data: ProductFormValues) => void;
@@ -104,7 +103,6 @@ const defaultValues: Partial<ProductFormValues> = {
 }
 
 export function ProductForm({ onSubmit, initialData, submitButtonText = "Create Product" }: ProductFormProps) {
-  const { toast } = useToast()
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: initialData || defaultValues,
@@ -131,13 +129,6 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
 
   function handleFormSubmit(data: ProductFormValues) {
     onSubmit(data)
-    toast({
-      title: "Product Action Successful",
-      description: `Product "${data.name}" has been successfully ${initialData ? 'updated' : 'created'}.`,
-    })
-    if (!initialData) {
-      form.reset();
-    }
   }
 
   return (
@@ -346,7 +337,10 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
         
         <Separator/>
 
-        <Button type="submit">{submitButtonText}</Button>
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting && <Trash2 className="mr-2 h-4 w-4 animate-spin" />}
+            {submitButtonText}
+        </Button>
       </form>
     </Form>
   )

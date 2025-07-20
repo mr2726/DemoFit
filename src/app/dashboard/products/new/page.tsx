@@ -1,14 +1,32 @@
 'use client';
 import { ProductForm } from '@/components/product-form';
 import { useRouter } from 'next/navigation';
+import { collection, addDoc } from "firebase/firestore";
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { ProductFormValues } from '@/components/product-form';
+
 
 export default function NewProductPage() {
     const router = useRouter();
+    const { toast } = useToast();
 
-    const handleFormSubmit = () => {
-        // Here you would typically handle form submission, e.g., send data to an API
-        // After successful submission, redirect the user.
-        router.push('/dashboard/products');
+    const handleFormSubmit = async (data: ProductFormValues) => {
+        try {
+            await addDoc(collection(db, "products"), data);
+            toast({
+                title: "Success",
+                description: "Product created successfully."
+            });
+            router.push('/dashboard/products');
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            toast({
+                title: "Error",
+                description: "Failed to create product.",
+                variant: "destructive"
+            });
+        }
     };
 
     return (

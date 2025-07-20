@@ -1,34 +1,81 @@
 'use client';
-import { ProductForm } from '@/components/product-form';
+import { ProductForm, ProductFormValues } from '@/components/product-form';
 import { useRouter } from 'next/navigation';
-import React from 'react';
-
-const mockProductData = {
-    name: "Advanced Gym Routine",
-    description: "A 12-week program for experienced gym-goers looking to break plateaus.",
-    price: 49.00,
-    category: "Workout Plan" as const,
-    imageUrl: "https://placehold.co/600x400",
-    weeks: 12,
-    exercises: [
-        { name: 'Bench Press', videoOrDescription: 'Lie on a flat bench...', sets: 4, reps: '8-12', rest: 90 },
-        { name: 'Deadlift', videoOrDescription: 'Stand with your mid-foot...', sets: 3, reps: '5', rest: 120 },
-    ],
-    recipes: [],
-    stock: undefined,
-    totalKcal: undefined,
-};
-
+import React, { useEffect, useState } from 'react';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 export default function EditProductPage({ params: { id } }: { params: { id: string } }) {
     const router = useRouter();
+    const { toast } = useToast();
+    const [initialData, setInitialData] = useState<ProductFormValues | null>(null);
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+        if (!id) return;
+        
+        const fetchProduct = async () => {
+            try {
+                const docRef = doc(db, "products", id);
+                const docSnap = await getDoc(docRef);
 
-    const handleFormSubmit = () => {
-        // Here you would typically handle form submission, e.g., send data to an API
-        // After successful submission, redirect the user.
-        console.log(`Product with id ${id} updated.`);
-        router.push('/dashboard/products');
+                if (docSnap.exists()) {
+                    setInitialData(docSnap.data() as ProductFormValues);
+                } else {
+                    toast({
+                        title: "Error",
+                        description: "Product not found.",
+                        variant: "destructive"
+                    });
+                    router.push('/dashboard/products');
+                }
+            } catch (error) {
+                console.error("Error fetching product:", error);
+                 toast({
+                    title: "Error",
+                    description: "Failed to fetch product details.",
+                    variant: "destructive"
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProduct();
+    }, [id, router, toast]);
+
+    const handleFormSubmit = async (data: ProductFormValues) => {
+        try {
+            const docRef = doc(db, "products", id);
+            await updateDoc(docRef, data);
+            toast({
+                title: "Success",
+                description: "Product updated successfully."
+            });
+            router.push('/dashboard/products');
+        } catch (e) {
+            console.error("Error updating document: ", e);
+            toast({
+                title: "Error",
+                description: "Failed to update product.",
+                variant: "destructive"
+            });
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="flex h-64 w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (!initialData) {
+        return null; // or a not found component
+    }
 
     return (
         <div className="space-y-6">
@@ -38,7 +85,7 @@ export default function EditProductPage({ params: { id } }: { params: { id: stri
             </header>
             <ProductForm 
                 onSubmit={handleFormSubmit} 
-                initialData={mockProductData}
+                initialData={initialData}
                 submitButtonText="Update Product"
             />
         </div>
