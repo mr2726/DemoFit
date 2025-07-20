@@ -21,7 +21,7 @@ export default {
       fontFamily: {
         sans: ['PT Sans', ...fontFamily.sans],
         body: ['PT Sans', 'sans-serif'],
-        headline: ['PT Sans', 'sans-serif'],
+        headline: ['var(--font-roboto-condensed)', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
