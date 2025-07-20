@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Activity, Flame, HeartPulse, Weight } from 'lucide-react';
 import { ActivityCalendar } from '@/components/activity-calendar';
+import { useState, useEffect } from 'react';
 
 
 const weightData = [
@@ -24,15 +25,11 @@ const caloriesData = [
   { day: 'Sun', calories: 2350 },
 ];
 
-const activityData = Array.from({ length: 365 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - 365 + i);
-    return {
-      date: date.toISOString().slice(0, 10),
-      count: Math.floor(Math.random() * 5),
-      level: Math.floor(Math.random() * 5),
-    };
-});
+type ActivityData = {
+  date: string;
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+};
 
 const StatCard = ({ title, value, icon: Icon }: { title: string; value: string; icon: React.ElementType }) => (
     <Card>
@@ -47,6 +44,21 @@ const StatCard = ({ title, value, icon: Icon }: { title: string; value: string; 
 );
 
 export default function DashboardPage() {
+  const [activityData, setActivityData] = useState<ActivityData[]>([]);
+
+  useEffect(() => {
+    const data = Array.from({ length: 365 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - 365 + i);
+        return {
+          date: date.toISOString().slice(0, 10),
+          count: Math.floor(Math.random() * 5),
+          level: (Math.floor(Math.random() * 5)) as (0 | 1 | 2 | 3 | 4),
+        };
+    });
+    setActivityData(data);
+  }, []);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
@@ -111,7 +123,11 @@ export default function DashboardPage() {
             <CardDescription>Your workout consistency over the past year.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ActivityCalendar data={activityData} />
+            {activityData.length > 0 ? (
+                <ActivityCalendar data={activityData} />
+            ) : (
+                <div className="h-40 flex items-center justify-center text-muted-foreground">Loading activity...</div>
+            )}
           </CardContent>
         </Card>
     </div>
