@@ -42,7 +42,7 @@ const AppHeader = () => {
 
   if (loading) {
     return (
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 mt-2.5">
         <div className="ml-auto flex items-center gap-4">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
@@ -51,7 +51,7 @@ const AppHeader = () => {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 mt-2.5">
       <SidebarTrigger className="sm:hidden" />
       <div className="ml-auto flex items-center gap-4">
         <DropdownMenu>
