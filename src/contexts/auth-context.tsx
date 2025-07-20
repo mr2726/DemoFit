@@ -27,6 +27,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
+        // Refresh user to get latest profile updates
+        await user.reload();
+        // Set user again with reloaded data
+        setUser(auth.currentUser);
+
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists() && userDoc.data().role === 'admin') {

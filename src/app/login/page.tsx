@@ -3,14 +3,22 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Image from 'next/image';
-import { auth, db } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48" {...props}>
@@ -21,110 +29,241 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
+const loginSchema = z.object({
+    email: z.string().email({ message: "Invalid email address." }),
+    password: z.string().min(1, { message: "Password is required." }),
+});
+
+const signUpSchema = z.object({
+    displayName: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z.string().email({ message: "Invalid email address." }),
+    password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+});
+
+
 export default function LoginPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const [authReady, setAuthReady] = useState(false);
+    const router = useRouter();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(false);
+    const [authReady, setAuthReady] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-        if (user) {
-            router.push('/dashboard');
-        } else {
-            setAuthReady(true);
-        }
+    const loginForm = useForm<z.infer<typeof loginSchema>>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: { email: "", password: "" },
     });
-    return () => unsubscribe();
-  }, [router]);
 
+    const signUpForm = useForm<z.infer<typeof signUpSchema>>({
+        resolver: zodResolver(signUpSchema),
+        defaultValues: { displayName: "", email: "", password: "" },
+    });
 
-  const handleGoogleLogin = async () => {
-    setIsSigningIn(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          role: 'user', // default role
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            if (user) {
+                router.push('/dashboard');
+            } else {
+                setAuthReady(true);
+            }
         });
-      }
+        return () => unsubscribe();
+    }, [router]);
 
-      router.push('/dashboard');
-    } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-          toast({
-            title: "Login Canceled",
-            description: "The login popup was closed. This may be due to a Firebase configuration issue. Please check your project's 'Authorized Domains' in the Firebase console.",
-            variant: "destructive"
-          });
-      } else {
-        console.error("Error during Google login:", error);
-        toast({
-          title: "Login Failed",
-          description: "Could not log in with Google. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-        setIsSigningIn(false);
+    const handleFirebaseError = (error: any) => {
+        let message = "An unexpected error occurred. Please try again.";
+        switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                message = "Invalid email or password.";
+                break;
+            case 'auth/email-already-in-use':
+                message = "This email address is already in use.";
+                break;
+            case 'auth/weak-password':
+                message = "The password is too weak.";
+                break;
+            case 'auth/popup-closed-by-user':
+                message = "The login popup was closed. This may be due to a Firebase configuration issue. Please check your project's 'Authorized Domains' in the Firebase console.";
+                break;
+        }
+        toast({ title: "Authentication Failed", description: message, variant: "destructive" });
     }
-  };
-  
-  if (!authReady) {
+
+    const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+        setIsLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, values.email, values.password);
+            // onAuthStateChanged will handle redirect
+        } catch (error) {
+            handleFirebaseError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const onSignUpSubmit = async (values: z.infer<typeof signUpSchema>) => {
+        setIsLoading(true);
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+            const user = userCredential.user;
+
+            await updateProfile(user, { displayName: values.displayName });
+            
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: values.displayName,
+                photoURL: user.photoURL,
+                role: 'user',
+            });
+            // onAuthStateChanged will handle redirect
+        } catch (error) {
+            handleFirebaseError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    role: 'user', // default role
+                });
+            }
+            // onAuthStateChanged will handle redirect
+        } catch (error: any) {
+            handleFirebaseError(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (!authReady) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+
     return (
-        <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="relative flex min-h-screen flex-col items-center justify-center">
+            <Image
+                src="https://placehold.co/1920x1080"
+                alt="Man working out"
+                fill={true}
+                objectFit="cover"
+                className="opacity-20"
+                data-ai-hint="gym background"
+            />
+            <div className="absolute inset-0 bg-background/80" />
+            <Card className="relative z-10 w-full max-w-sm">
+                <CardHeader className="text-center">
+                    <CardTitle className="text-2xl font-headline">Welcome to Fitness Hub</CardTitle>
+                    <CardDescription>Sign in or create an account to continue</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="signin">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="signin">Sign In</TabsTrigger>
+                            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="signin">
+                             <Form {...loginForm}>
+                                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 pt-4">
+                                    <FormField control={loginForm.control} name="email" render={({ field }) => (
+                                        <FormItem>
+                                            <Label>Email</Label>
+                                            <FormControl>
+                                                <Input id="email" type="email" placeholder="m@example.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField control={loginForm.control} name="password" render={({ field }) => (
+                                        <FormItem>
+                                            <Label>Password</Label>
+                                            <FormControl>
+                                                <Input id="password" type="password" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                    <Button type="submit" className="w-full" disabled={isLoading}>
+                                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Sign In
+                                    </Button>
+                                </form>
+                            </Form>
+                        </TabsContent>
+                        <TabsContent value="signup">
+                            <Form {...signUpForm}>
+                                <form onSubmit={signUpForm.handleSubmit(onSignUpSubmit)} className="space-y-4 pt-4">
+                                     <FormField control={signUpForm.control} name="displayName" render={({ field }) => (
+                                        <FormItem>
+                                            <Label>Name</Label>
+                                            <FormControl><Input placeholder="Jane Doe" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                     <FormField control={signUpForm.control} name="email" render={({ field }) => (
+                                        <FormItem>
+                                            <Label>Email</Label>
+                                            <FormControl><Input type="email" placeholder="m@example.com" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                      <FormField control={signUpForm.control} name="password" render={({ field }) => (
+                                        <FormItem>
+                                            <Label>Password</Label>
+                                            <FormControl><Input type="password" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                    <Button type="submit" className="w-full" disabled={isLoading}>
+                                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Create Account
+                                    </Button>
+                                </form>
+                            </Form>
+                        </TabsContent>
+                    </Tabs>
+                    
+                    <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
+                            {isLoading ? (
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            ) : (
+                                <GoogleIcon className="mr-2 h-5 w-5" />
+                            )}
+                            Login with Google
+                        </Button>
+                         <Button variant="secondary" asChild><Link href="/dashboard">Continue as Guest</Link></Button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
-  }
-
-  return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center">
-       <Image 
-        src="https://placehold.co/1920x1080" 
-        alt="Man working out" 
-        fill={true}
-        objectFit="cover"
-        className="opacity-20"
-        data-ai-hint="gym background"
-      />
-      <div className="absolute inset-0 bg-background/80" />
-      <Card className="relative z-10 w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Welcome to Fitness Hub</CardTitle>
-          <CardDescription>Sign in to continue your fitness journey</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Button variant="outline" onClick={handleGoogleLogin} disabled={isSigningIn}>
-              {isSigningIn ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <GoogleIcon className="mr-2 h-5 w-5" />
-              )}
-              Login with Google
-            </Button>
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or continue as guest</span>
-                </div>
-            </div>
-            <Button variant="secondary" asChild><Link href="/dashboard">Continue as Guest</Link></Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
 }
