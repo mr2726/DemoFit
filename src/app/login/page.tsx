@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { auth, db } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -25,15 +25,14 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    // Firebase initialization can be asynchronous, wait for auth to be ready
     const unsubscribe = auth.onAuthStateChanged(user => {
-        if (!user) {
-            setLoading(false);
-        } else {
+        if (user) {
             router.push('/dashboard');
+        } else {
+            setAuthReady(true);
         }
     });
     return () => unsubscribe();
@@ -41,21 +40,12 @@ export default function LoginPage() {
 
 
   const handleGoogleLogin = async () => {
-    if (!auth) {
-        toast({
-            title: "Error",
-            description: "Firebase is not initialized. Please try again in a moment.",
-            variant: "destructive"
-        });
-        return;
-    }
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check if user exists in Firestore, if not create a document
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       if (!userDoc.exists()) {
@@ -89,7 +79,7 @@ export default function LoginPage() {
     }
   };
   
-  if (loading) {
+  if (!authReady) {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />

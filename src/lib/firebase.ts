@@ -14,18 +14,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (typeof window !== 'undefined' && !getApps().length) {
+if (!getApps().length) {
     app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else if (getApps().length) {
+} else {
     app = getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
 }
 
-// @ts-ignore
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 export { app, auth, db };
