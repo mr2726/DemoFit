@@ -1,3 +1,4 @@
+'use client';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,7 +23,10 @@ import {
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ProductForm } from "@/components/product-form";
+import { useState } from "react";
 
 const products = [
     { name: "Beginner Bodyweight", category: "Workout Plan", price: "$19.00", stock: 100, status: "Active" },
@@ -38,70 +42,85 @@ const products = [
 ];
 
 export default function ProductsPage() {
+    const [open, setOpen] = useState(false);
+
     return (
-        <div className="space-y-6">
-             <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold font-headline">Products</h1>
-                    <p className="text-muted-foreground">Manage your marketplace products.</p>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <div className="space-y-6">
+                 <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold font-headline">Products</h1>
+                        <p className="text-muted-foreground">Manage your marketplace products.</p>
+                    </div>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Product
+                        </Button>
+                    </DialogTrigger>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Product
-                </Button>
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Product List</CardTitle>
-                    <CardDescription>View and manage all products available in the marketplace.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Price</TableHead>
-                                <TableHead>Stock</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead><span className="sr-only">Actions</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {products.map((product) => (
-                                <TableRow key={product.name}>
-                                    <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={product.status === 'Active' ? 'default' : 'secondary'}
-                                            className={product.status === 'Archived' ? 'bg-muted text-muted-foreground' : ''}
-                                        >
-                                            {product.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>{product.price}</TableCell>
-                                    <TableCell>{product.stock}</TableCell>
-                                    <TableCell>{product.category}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                    <span className="sr-only">Toggle menu</span>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem>Delete</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Product List</CardTitle>
+                        <CardDescription>View and manage all products available in the marketplace.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead>Stock</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead><span className="sr-only">Actions</span></TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                            </TableHeader>
+                            <TableBody>
+                                {products.map((product) => (
+                                    <TableRow key={product.name}>
+                                        <TableCell className="font-medium">{product.name}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={product.status === 'Active' ? 'default' : 'secondary'}
+                                                className={product.status === 'Archived' ? 'bg-muted text-muted-foreground' : ''}
+                                            >
+                                                {product.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>{product.price}</TableCell>
+                                        <TableCell>{product.stock}</TableCell>
+                                        <TableCell>{product.category}</TableCell>
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                        <span className="sr-only">Toggle menu</span>
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                <DialogTitle>Add New Product</DialogTitle>
+                <DialogDescription>
+                    Fill in the details below to create a new product.
+                </DialogDescription>
+                </DialogHeader>
+                <ProductForm onSubmit={() => setOpen(false)} />
+            </DialogContent>
+        </Dialog>
     );
 }
