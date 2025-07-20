@@ -50,3 +50,21 @@ export async function createCheckoutSession(productId: string): Promise<{ client
     return { clientSecret: null, error: `Could not create checkout session: ${errorMessage}` };
   }
 }
+
+export async function getCheckoutSessionStatus(sessionId: string): Promise<{ status: Stripe.Checkout.Session.Status | null, customerEmail: string | null, error?: string }> {
+    if (!sessionId) {
+        return { status: null, customerEmail: null, error: 'Session ID is required.' };
+    }
+
+    try {
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        return {
+            status: session.status,
+            customerEmail: session.customer_details?.email || null,
+        };
+    } catch (e) {
+        console.error("Error retrieving session:", e);
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+        return { status: 'expired', customerEmail: null, error: `Could not retrieve session: ${errorMessage}` };
+    }
+}
