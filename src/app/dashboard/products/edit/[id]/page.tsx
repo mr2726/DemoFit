@@ -20,9 +20,8 @@ const mockProductData = {
 };
 
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage({ params: { id } }: { params: { id: string } }) {
     const router = useRouter();
-    const { id } = params;
 
     const handleFormSubmit = () => {
         // Here you would typically handle form submission, e.g., send data to an API
