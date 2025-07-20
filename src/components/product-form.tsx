@@ -55,30 +55,37 @@ const productFormSchema = z.object({
 
   // Supplements specific fields
   stock: z.coerce.number().int().min(0, "Stock can't be negative.").optional(),
-}).refine(data => {
+}).superRefine((data, ctx) => {
     if (data.category === "Workout Plan") {
-        return !!data.imageUrl && !!data.weeks && !!data.exercises && data.exercises.length > 0;
+        if (!data.imageUrl) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Image URL is required for Workout Plans.", path: ["imageUrl"] });
+        }
+        if (!data.weeks) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Duration (weeks) is required for Workout Plans.", path: ["weeks"] });
+        }
+        if (!data.exercises || data.exercises.length === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one exercise is required for Workout Plans.", path: ["exercises"] });
+        }
     }
-    return true;
-}, {
-    message: "Image, duration, and at least one exercise are required for Workout Plans.",
-    path: ["imageUrl"]
-}).refine(data => {
     if (data.category === "Nutrition") {
-        return !!data.imageUrl && !!data.totalKcal && !!data.recipes && data.recipes.length > 0;
+        if (!data.imageUrl) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Image URL is required for Nutrition Plans.", path: ["imageUrl"] });
+        }
+        if (!data.totalKcal) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Total Kcal is required for Nutrition Plans.", path: ["totalKcal"] });
+        }
+        if (!data.recipes || data.recipes.length === 0) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one recipe is required for Nutrition Plans.", path: ["recipes"] });
+        }
     }
-    return true;
-}, {
-    message: "Image, total Kcal, and at least one recipe are required for Nutrition Plans.",
-    path: ["imageUrl"]
-}).refine(data => {
     if (data.category === "Supplements") {
-        return !!data.imageUrl && data.stock !== undefined && data.stock !== null;
+        if (!data.imageUrl) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Image URL is required for Supplements.", path: ["imageUrl"] });
+        }
+        if (data.stock === undefined || data.stock === null) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stock is required for Supplements.", path: ["stock"] });
+        }
     }
-    return true;
-}, {
-    message: "Image and Stock are required for Supplements.",
-    path: ["imageUrl"]
 });
 
 
@@ -221,7 +228,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                         <FormItem>
                         <FormLabel>Stock</FormLabel>
                         <FormControl>
-                            <Input type="number" placeholder="100" {...field} value={field.value || ''}/>
+                            <Input type="number" placeholder="100" {...field} value={field.value ?? ''}/>
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -244,7 +251,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                 <FormField control={form.control} name="weeks" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Duration (weeks)</FormLabel>
-                        <FormControl><Input type="number" placeholder="8" {...field} value={field.value || ''} /></FormControl>
+                        <FormControl><Input type="number" placeholder="8" {...field} value={field.value ?? ''} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
@@ -298,7 +305,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                 <FormField control={form.control} name="totalKcal" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Total Kcal</FormLabel>
-                        <FormControl><Input type="number" placeholder="2500" {...field} value={field.value || ''}/></FormControl>
+                        <FormControl><Input type="number" placeholder="2500" {...field} value={field.value ?? ''}/></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
@@ -320,7 +327,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                                         <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://placehold.co/300x200" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`recipes.${index}.kcal`} render={({ field }) => (
-                                        <FormItem><FormLabel>Kcal (Optional)</FormLabel><FormControl><Input type="number" placeholder="550" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Kcal (Optional)</FormLabel><FormControl><Input type="number" placeholder="550" {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
                                 <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeRecipe(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
@@ -345,3 +352,4 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
     </Form>
   )
 }
+
