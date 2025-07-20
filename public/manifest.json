@@ -1,0 +1,21 @@
+{
+  "name": "Fitness Hub",
+  "short_name": "FitnessHub",
+  "description": "Your all-in-one platform for fitness plans, nutrition, and supplements.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F5F5DC",
+  "theme_color": "#3F704F",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
