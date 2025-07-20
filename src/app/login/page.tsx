@@ -69,13 +69,21 @@ export default function LoginPage() {
       }
 
       router.push('/dashboard');
-    } catch (error) {
-      console.error("Error during Google login:", error);
-      toast({
-        title: "Login Failed",
-        description: "Could not log in with Google. Please try again.",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+          toast({
+            title: "Login Canceled",
+            description: "The login popup was closed. This may be due to a Firebase configuration issue. Please check your project's 'Authorized Domains' in the Firebase console.",
+            variant: "destructive"
+          });
+      } else {
+        console.error("Error during Google login:", error);
+        toast({
+          title: "Login Failed",
+          description: "Could not log in with Google. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
         setIsSigningIn(false);
     }
