@@ -28,16 +28,16 @@ import Link from "next/link";
 
 
 const products = [
-    { name: "Beginner Bodyweight", category: "Workout Plan", price: "$19.00", stock: 100, status: "Active" },
-    { name: "Advanced Gym Routine", category: "Workout Plan", price: "$49.00", stock: 100, status: "Active" },
-    { name: "Yoga for Flexibility", category: "Workout Plan", price: "$29.00", stock: 100, status: "Active" },
-    { name: "HIIT Cardio", category: "Workout Plan", price: "$25.00", stock: 100, status: "Draft" },
-    { name: "Lean Bulk Meal Plan", category: "Nutrition", price: "$39.00", stock: 100, status: "Active" },
-    { name: "Weight Loss Guide", category: "Nutrition", price: "$39.00", stock: 100, status: "Archived" },
-    { name: "Vegan Athlete Diet", category: "Nutrition", price: "$45.00", stock: 100, status: "Active" },
-    { name: "Whey Protein", category: "Supplements", price: "$59.00", stock: 50, status: "Active" },
-    { name: "Creatine Monohydrate", category: "Supplements", price: "$29.00", stock: 25, status: "Active" },
-    { name: "Pre-Workout Fusion", category: "Supplements", price: "$45.00", stock: 75, status: "Active" },
+    { name: "Beginner Bodyweight", category: "Workout Plan", price: "$19.00", stock: 100 },
+    { name: "Advanced Gym Routine", category: "Workout Plan", price: "$49.00", stock: 100 },
+    { name: "Yoga for Flexibility", category: "Workout Plan", price: "$29.00", stock: 100 },
+    { name: "HIIT Cardio", category: "Workout Plan", price: "$25.00", stock: 100 },
+    { name: "Lean Bulk Meal Plan", category: "Nutrition", price: "$39.00", stock: 100 },
+    { name: "Weight Loss Guide", category: "Nutrition", price: "$39.00", stock: 100 },
+    { name: "Vegan Athlete Diet", category: "Nutrition", price: "$45.00", stock: 100 },
+    { name: "Whey Protein", category: "Supplements", price: "$59.00", stock: 50 },
+    { name: "Creatine Monohydrate", category: "Supplements", price: "$29.00", stock: 25 },
+    { name: "Pre-Workout Fusion", category: "Supplements", price: "$45.00", stock: 75 },
 ];
 
 export default function ProductsPage() {
@@ -65,7 +65,6 @@ export default function ProductsPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
-                                <TableHead>Status</TableHead>
                                 <TableHead>Price</TableHead>
                                 <TableHead>Stock</TableHead>
                                 <TableHead>Category</TableHead>
@@ -76,13 +75,6 @@ export default function ProductsPage() {
                             {products.map((product) => (
                                 <TableRow key={product.name}>
                                     <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={product.status === 'Active' ? 'default' : 'secondary'}
-                                            className={product.status === 'Archived' ? 'bg-muted text-muted-foreground' : ''}
-                                        >
-                                            {product.status}
-                                        </Badge>
-                                    </TableCell>
                                     <TableCell>{product.price}</TableCell>
                                     <TableCell>{product.stock}</TableCell>
                                     <TableCell>{product.category}</TableCell>

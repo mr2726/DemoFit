@@ -42,7 +42,6 @@ const productFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters."),
   price: z.coerce.number().positive("Price must be a positive number."),
   category: z.enum(["Workout Plan", "Nutrition", "Supplements"]),
-  status: z.enum(["Active", "Draft", "Archived"]),
   
   // Workout Plan specific fields
   imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
@@ -89,7 +88,6 @@ const defaultValues: Partial<ProductFormValues> = {
   description: "",
   price: 0,
   category: "Workout Plan",
-  status: "Draft",
   stock: 0,
   weeks: 4,
   totalKcal: 2000,
@@ -321,28 +319,6 @@ export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) 
         
         <Separator/>
 
-        <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-                <FormItem className="w-1/2 pr-2">
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Draft">Draft</SelectItem>
-                    <SelectItem value="Archived">Archived</SelectItem>
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
         <Button type="submit">Create Product</Button>
       </form>
     </Form>
