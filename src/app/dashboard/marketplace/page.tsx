@@ -62,7 +62,7 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
             <CardFooter className="p-4 pt-0 flex justify-between items-center">
                 <span className="text-2xl font-bold">${item.price.toFixed(2)}</span>
                 <Button asChild>
-                    <Link href={`/dashboard/products/edit/${item.id}`}>View Details</Link>
+                    <Link href={`/dashboard/products/edit/${item.id}`}>Buy Now</Link>
                 </Button>
             </CardFooter>
         </Card>
