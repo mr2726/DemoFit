@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import {
     DropdownMenu,
@@ -28,16 +27,16 @@ import Link from "next/link";
 
 
 const products = [
-    { name: "Beginner Bodyweight", category: "Workout Plan", price: "$19.00", stock: 100 },
-    { name: "Advanced Gym Routine", category: "Workout Plan", price: "$49.00", stock: 100 },
-    { name: "Yoga for Flexibility", category: "Workout Plan", price: "$29.00", stock: 100 },
-    { name: "HIIT Cardio", category: "Workout Plan", price: "$25.00", stock: 100 },
-    { name: "Lean Bulk Meal Plan", category: "Nutrition", price: "$39.00", stock: 100 },
-    { name: "Weight Loss Guide", category: "Nutrition", price: "$39.00", stock: 100 },
-    { name: "Vegan Athlete Diet", category: "Nutrition", price: "$45.00", stock: 100 },
-    { name: "Whey Protein", category: "Supplements", price: "$59.00", stock: 50 },
-    { name: "Creatine Monohydrate", category: "Supplements", price: "$29.00", stock: 25 },
-    { name: "Pre-Workout Fusion", category: "Supplements", price: "$45.00", stock: 75 },
+    { id: 1, name: "Beginner Bodyweight", category: "Workout Plan", price: "$19.00", stock: 100 },
+    { id: 2, name: "Advanced Gym Routine", category: "Workout Plan", price: "$49.00", stock: 100 },
+    { id: 3, name: "Yoga for Flexibility", category: "Workout Plan", price: "$29.00", stock: 100 },
+    { id: 4, name: "HIIT Cardio", category: "Workout Plan", price: "$25.00", stock: 100 },
+    { id: 5, name: "Lean Bulk Meal Plan", category: "Nutrition", price: "$39.00", stock: 100 },
+    { id: 6, name: "Weight Loss Guide", category: "Nutrition", price: "$39.00", stock: 100 },
+    { id: 7, name: "Vegan Athlete Diet", category: "Nutrition", price: "$45.00", stock: 100 },
+    { id: 8, name: "Whey Protein", category: "Supplements", price: "$59.00", stock: 50 },
+    { id: 9, name: "Creatine Monohydrate", category: "Supplements", price: "$29.00", stock: 25 },
+    { id: 10, name: "Pre-Workout Fusion", category: "Supplements", price: "$45.00", stock: 75 },
 ];
 
 export default function ProductsPage() {
@@ -73,7 +72,7 @@ export default function ProductsPage() {
                         </TableHeader>
                         <TableBody>
                             {products.map((product) => (
-                                <TableRow key={product.name}>
+                                <TableRow key={product.id}>
                                     <TableCell className="font-medium">{product.name}</TableCell>
                                     <TableCell>{product.price}</TableCell>
                                     <TableCell>{product.stock}</TableCell>
@@ -88,7 +87,9 @@ export default function ProductsPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/dashboard/products/edit/${product.id}`}>Edit</Link>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem>Delete</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

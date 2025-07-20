@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2 } from "lucide-react"
 import { Card, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
+import React from "react"
 
 const exerciseSchema = z.object({
     name: z.string().min(1, "Exercise name is required."),
@@ -83,6 +84,12 @@ const productFormSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productFormSchema>
 
+interface ProductFormProps {
+    onSubmit: (data: ProductFormValues) => void;
+    initialData?: Partial<ProductFormValues>;
+    submitButtonText?: string;
+}
+
 const defaultValues: Partial<ProductFormValues> = {
   name: "",
   description: "",
@@ -95,13 +102,19 @@ const defaultValues: Partial<ProductFormValues> = {
   recipes: [],
 }
 
-export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) => void }) {
+export function ProductForm({ onSubmit, initialData, submitButtonText = "Create Product" }: ProductFormProps) {
   const { toast } = useToast()
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues,
+    defaultValues: initialData || defaultValues,
     mode: "onChange",
   })
+  
+  React.useEffect(() => {
+    if (initialData) {
+        form.reset(initialData);
+    }
+  }, [initialData, form]);
 
   const { fields: exerciseFields, append: appendExercise, remove: removeExercise } = useFieldArray({
     control: form.control,
@@ -119,9 +132,11 @@ export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) 
     onSubmit(data)
     toast({
       title: "Product Action Successful",
-      description: `Product "${data.name}" has been successfully created.`,
+      description: `Product "${data.name}" has been successfully ${initialData ? 'updated' : 'created'}.`,
     })
-    form.reset();
+    if (!initialData) {
+      form.reset();
+    }
   }
 
   return (
@@ -319,7 +334,7 @@ export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) 
         
         <Separator/>
 
-        <Button type="submit">Create Product</Button>
+        <Button type="submit">{submitButtonText}</Button>
       </form>
     </Form>
   )
