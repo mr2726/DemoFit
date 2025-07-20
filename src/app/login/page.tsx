@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48" {...props}>
@@ -24,8 +25,30 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Firebase initialization can be asynchronous, wait for auth to be ready
+    const unsubscribe = auth.onAuthStateChanged(user => {
+        if (!user) {
+            setLoading(false);
+        } else {
+            router.push('/dashboard');
+        }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
 
   const handleGoogleLogin = async () => {
+    if (!auth) {
+        toast({
+            title: "Error",
+            description: "Firebase is not initialized. Please try again in a moment.",
+            variant: "destructive"
+        });
+        return;
+    }
     setIsSigningIn(true);
     const provider = new GoogleAuthProvider();
     try {
@@ -57,13 +80,21 @@ export default function LoginPage() {
         setIsSigningIn(false);
     }
   };
+  
+  if (loading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center">
        <Image 
         src="https://placehold.co/1920x1080" 
         alt="Man working out" 
-        layout="fill"
+        fill={true}
         objectFit="cover"
         className="opacity-20"
         data-ai-hint="gym background"
