@@ -24,6 +24,11 @@ export default function CheckoutPage({ params }: { params: { productId: string }
 
   useEffect(() => {
     const fetchProductAndCreateSession = async () => {
+      if (!productId) {
+        setLoading(false);
+        toast({ title: 'Error', description: 'Product ID is missing.', variant: 'destructive' });
+        return;
+      }
       setLoading(true);
       try {
         // Fetch product details
@@ -32,6 +37,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
 
         if (!docSnap.exists()) {
           toast({ title: 'Error', description: 'Product not found.', variant: 'destructive' });
+          setLoading(false);
           return;
         }
 
@@ -42,6 +48,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
         const { clientSecret, error } = await createCheckoutSession(productId);
         if (error) {
           toast({ title: 'Error', description: error, variant: 'destructive' });
+          setLoading(false);
           return;
         }
 
@@ -54,9 +61,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
       }
     };
 
-    if (productId) {
-      fetchProductAndCreateSession();
-    }
+    fetchProductAndCreateSession();
   }, [productId, toast]);
 
   if (loading || !product) {
