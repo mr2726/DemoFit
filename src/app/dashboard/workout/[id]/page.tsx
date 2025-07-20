@@ -100,7 +100,7 @@ export default function WorkoutPlayerPage({ params }: { params: { id: string } }
                     </Button>
                     <Button variant="outline" size="lg" onClick={handleNext}><SkipForward className="mr-2 h-5 w-5"/>Next</Button>
                 </div>
-            </CardContent>
+            </div>
           </CardContent>
         </Card>
       </div>
