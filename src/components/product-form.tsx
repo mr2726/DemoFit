@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { PlusCircle, Trash2 } from "lucide-react"
-import { Card, CardContent, CardHeader } from "./ui/card"
+import { Card, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
 
 const exerciseSchema = z.object({
@@ -34,7 +33,7 @@ const exerciseSchema = z.object({
 const recipeSchema = z.object({
     name: z.string().min(1, "Recipe name is required."),
     instructions: z.string().min(10, "Instructions are required."),
-    imageUrl: z.string().url().optional(),
+    imageUrl: z.string().url().optional().or(z.literal('')),
     kcal: z.coerce.number().int().min(0).optional(),
 });
 
@@ -46,7 +45,7 @@ const productFormSchema = z.object({
   status: z.enum(["Active", "Draft", "Archived"]),
   
   // Workout Plan specific fields
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   weeks: z.coerce.number().int().min(1).optional(),
   exercises: z.array(exerciseSchema).optional(),
 
@@ -63,7 +62,7 @@ const productFormSchema = z.object({
     return true;
 }, {
     message: "Image, duration, and at least one exercise are required for Workout Plans.",
-    path: ["category"]
+    path: ["imageUrl"] // You can also target specific fields for the error message
 }).refine(data => {
     if (data.category === "Nutrition") {
         return !!data.imageUrl && !!data.totalKcal && !!data.recipes && data.recipes.length > 0;
@@ -71,7 +70,7 @@ const productFormSchema = z.object({
     return true;
 }, {
     message: "Image, total Kcal, and at least one recipe are required for Nutrition Plans.",
-    path: ["category"]
+    path: ["imageUrl"]
 }).refine(data => {
     if (data.category === "Supplements") {
         return data.stock !== undefined && data.stock !== null;
@@ -79,7 +78,7 @@ const productFormSchema = z.object({
     return true;
 }, {
     message: "Stock is required for Supplements.",
-    path: ["category"]
+    path: ["stock"]
 });
 
 
@@ -122,7 +121,7 @@ export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) 
     onSubmit(data)
     toast({
       title: "Product Action Successful",
-      description: `Product "${data.name}" has been successfully processed.`,
+      description: `Product "${data.name}" has been successfully created.`,
     })
     form.reset();
   }
@@ -302,10 +301,10 @@ export function ProductForm({ onSubmit }: { onSubmit: (data: ProductFormValues) 
                                 )}/>
                                 <div className="grid grid-cols-2 gap-2">
                                      <FormField control={form.control} name={`recipes.${index}.imageUrl`} render={({ field }) => (
-                                        <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://placehold.co/300x200" {...field}/></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://placehold.co/300x200" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`recipes.${index}.kcal`} render={({ field }) => (
-                                        <FormItem><FormLabel>Kcal (Optional)</FormLabel><FormControl><Input type="number" placeholder="550" {...field}/></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Kcal (Optional)</FormLabel><FormControl><Input type="number" placeholder="550" {...field} value={field.value || ''}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
                                 <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeRecipe(index)}><Trash2 className="w-4 h-4 text-destructive"/></Button>
