@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,11 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Dumbbell, Apple, Package, Star, Loader2 } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { createCheckoutSession } from "@/actions/stripe";
+import Link from "next/link";
 
 interface Product {
     id: string;
@@ -24,9 +25,6 @@ interface Product {
 }
 
 const MarketplaceCard = ({ item }: { item: Product }) => {
-    const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
-
     const getTag = () => {
         switch (item.category) {
             case "Workout Plan":
@@ -39,21 +37,6 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
                 return 'New';
         }
     };
-    
-    const handleBuyNow = () => {
-        startTransition(async () => {
-            try {
-                await createCheckoutSession(item);
-            } catch (error) {
-                console.error("Failed to create checkout session:", error);
-                toast({
-                    title: "Error",
-                    description: "Could not initiate checkout. Please try again.",
-                    variant: "destructive",
-                });
-            }
-        });
-    }
 
     return (
         <Card className="flex flex-col">
@@ -79,8 +62,8 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-between items-center">
                 <span className="text-2xl font-bold">${item.price.toFixed(2)}</span>
-                <Button onClick={handleBuyNow} disabled={isPending}>
-                    {isPending ? <Loader2 className="animate-spin" /> : "Buy Now"}
+                <Button asChild>
+                    <Link href={`/dashboard/checkout/${item.id}`}>Buy Now</Link>
                 </Button>
             </CardFooter>
         </Card>

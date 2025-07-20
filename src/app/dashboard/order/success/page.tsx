@@ -1,34 +1,34 @@
+
 'use client';
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { getCheckoutSession } from '@/actions/stripe';
+import { getPaymentIntent } from '@/actions/stripe';
 
 function SuccessContent() {
     const searchParams = useSearchParams();
-    const sessionId = searchParams.get('session_id');
-    const [sessionStatus, setSessionStatus] = useState<string | null>(null);
-    const [customerEmail, setCustomerEmail] = useState<string | null>(null);
+    const paymentIntentId = searchParams.get('payment_intent');
+    const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (sessionId) {
-            getCheckoutSession(sessionId)
-                .then((session) => {
-                    if (session) {
-                        setSessionStatus(session.status);
-                        setCustomerEmail(session.customer_email);
+        if (paymentIntentId) {
+            getPaymentIntent(paymentIntentId)
+                .then((intent) => {
+                    if (intent) {
+                        setStatus(intent.status);
                     }
                 })
                 .catch(console.error)
                 .finally(() => setLoading(false));
         } else {
             setLoading(false);
+            setStatus('error');
         }
-    }, [sessionId]);
+    }, [paymentIntentId]);
 
     if (loading) {
         return (
@@ -39,17 +39,17 @@ function SuccessContent() {
         );
     }
     
-    if (sessionStatus === 'complete') {
+    if (status === 'succeeded') {
         return (
             <>
                 <CheckCircle2 className="h-12 w-12 text-green-500" />
                 <CardTitle>Payment Successful!</CardTitle>
                 <CardDescription>
-                    Thank you for your purchase. A confirmation email has been sent to {customerEmail}.
+                    Thank you for your purchase. Your items will be available in your dashboard shortly.
                 </CardDescription>
                 <div className="mt-6 flex gap-4">
                     <Button asChild>
-                        <Link href="/dashboard">Go to Dashboard</Link>
+                        <Link href="/dashboard/my-workouts">Go to My Workouts</Link>
                     </Button>
                     <Button variant="outline" asChild>
                         <Link href="/dashboard/marketplace">Continue Shopping</Link>
@@ -59,16 +59,16 @@ function SuccessContent() {
         );
     }
     
-    if (sessionStatus === 'open') {
+    if (status === 'processing') {
          return (
             <>
                 <Loader2 className="h-12 w-12 animate-spin text-yellow-500" />
                 <CardTitle>Payment Processing</CardTitle>
                 <CardDescription>
-                    Your payment is still processing. We'll update you shortly. Please wait a moment and refresh the page.
+                    Your payment is processing. We'll update you shortly. Please check your dashboard later.
                 </CardDescription>
                  <div className="mt-6 flex gap-4">
-                     <Button onClick={() => window.location.reload()}>Refresh</Button>
+                     <Button asChild><Link href="/dashboard">Back to Dashboard</Link></Button>
                 </div>
             </>
         );
@@ -77,19 +77,18 @@ function SuccessContent() {
     return (
         <>
             <AlertCircle className="h-12 w-12 text-red-500" />
-            <CardTitle>Something went wrong</CardTitle>
+            <CardTitle>Payment Failed</CardTitle>
             <CardDescription>
-                We couldn't verify your payment. If you have been charged, please contact support.
+                We couldn't process your payment. Please try again or contact support if the problem persists.
             </CardDescription>
              <div className="mt-6 flex gap-4">
                 <Button asChild>
-                    <Link href="/dashboard/marketplace">Back to Marketplace</Link>
+                    <Link href="/dashboard/marketplace">Try Again</Link>
                 </Button>
             </div>
         </>
     );
 }
-
 
 export default function OrderSuccessPage() {
     return (
