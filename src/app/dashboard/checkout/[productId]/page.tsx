@@ -20,7 +20,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
   const [product, setProduct] = useState<ProductFormValues | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { productId } = params;
+  const productId = params.productId;
 
   useEffect(() => {
     const fetchProductAndCreateSession = async () => {
@@ -54,7 +54,9 @@ export default function CheckoutPage({ params }: { params: { productId: string }
       }
     };
 
-    fetchProductAndCreateSession();
+    if (productId) {
+      fetchProductAndCreateSession();
+    }
   }, [productId, toast]);
 
   if (loading || !product) {
