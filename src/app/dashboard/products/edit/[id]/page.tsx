@@ -1,6 +1,7 @@
 'use client';
 import { ProductForm } from '@/components/product-form';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 const mockProductData = {
     name: "Advanced Gym Routine",
@@ -21,11 +22,12 @@ const mockProductData = {
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
     const router = useRouter();
+    const { id } = params;
 
     const handleFormSubmit = () => {
         // Here you would typically handle form submission, e.g., send data to an API
         // After successful submission, redirect the user.
-        console.log(`Product with id ${params.id} updated.`);
+        console.log(`Product with id ${id} updated.`);
         router.push('/dashboard/products');
     };
 
@@ -33,7 +35,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         <div className="space-y-6">
             <header>
                 <h1 className="text-3xl font-bold font-headline">Edit Product</h1>
-                <p className="text-muted-foreground">Update the details for product ID: {params.id}</p>
+                <p className="text-muted-foreground">Update the details for product ID: {id}</p>
             </header>
             <ProductForm 
                 onSubmit={handleFormSubmit} 
