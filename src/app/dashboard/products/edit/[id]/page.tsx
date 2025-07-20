@@ -7,11 +7,12 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-export default function EditProductPage({ params: { id } }: { params: { id: string } }) {
+export default function EditProductPage({ params }: { params: { id: string } }) {
     const router = useRouter();
     const { toast } = useToast();
     const [initialData, setInitialData] = useState<ProductFormValues | null>(null);
     const [loading, setLoading] = useState(true);
+    const { id } = params;
     
     useEffect(() => {
         if (!id) return;
