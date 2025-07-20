@@ -46,7 +46,7 @@ export default function LoginPage() {
                 </div>
             </div>
             <Button variant="secondary" asChild><Link href="/dashboard">Continue as User</Link></Button>
-            <Button variant="secondary" asChild><Link href="/dashboard">Continue as Admin</Link></Button>
+            <Button variant="secondary" asChild><Link href="/dashboard?role=admin">Continue as Admin</Link></Button>
           </div>
         </CardContent>
       </Card>

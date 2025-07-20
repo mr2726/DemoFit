@@ -1,6 +1,6 @@
 "use client"
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 
 const AppHeader = () => {
@@ -66,20 +67,60 @@ const AppHeader = () => {
   );
 };
 
-const NavItem = ({ href, icon: Icon, label }: { href: string, icon: React.ElementType, label: string }) => {
+const NavItem = ({ href, icon: Icon, label, searchParams }: { href: string, icon: React.ElementType, label: string, searchParams?: URLSearchParams }) => {
     const pathname = usePathname();
     const isActive = pathname === href;
+
+    const linkSearchParams = new URLSearchParams(searchParams);
+    const linkHref = `${href}?${linkSearchParams.toString()}`;
 
     return (
         <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
-                <Link href={href}>
+                <Link href={linkHref}>
                     <Icon />
                     <span>{label}</span>
                 </Link>
             </SidebarMenuButton>
         </SidebarMenuItem>
     );
+}
+
+const DashboardNav = () => {
+    const searchParams = useSearchParams();
+    const role = searchParams.get('role');
+    const isAdmin = role === 'admin';
+
+    const navSearchParams = new URLSearchParams();
+    if (isAdmin) {
+        navSearchParams.set('role', 'admin');
+    }
+
+    return (
+        <SidebarMenu>
+            <NavItem href="/dashboard" icon={Home} label="Dashboard" searchParams={navSearchParams} />
+            {isAdmin && <NavItem href="/dashboard/analytics" icon={BarChart3} label="Analytics" searchParams={navSearchParams} />}
+            <NavItem href="/dashboard/marketplace" icon={ShoppingCart} label="Marketplace" searchParams={navSearchParams} />
+            <NavItem href="/dashboard/my-workouts" icon={Dumbbell} label="My Workouts" searchParams={navSearchParams} />
+        </SidebarMenu>
+    )
+}
+
+const SettingsNav = () => {
+    const searchParams = useSearchParams();
+    const role = searchParams.get('role');
+    const isAdmin = role === 'admin';
+
+    const navSearchParams = new URLSearchParams();
+    if (isAdmin) {
+        navSearchParams.set('role', 'admin');
+    }
+
+    return (
+        <SidebarMenu>
+            <NavItem href="/dashboard/settings" icon={Settings} label="Settings" searchParams={navSearchParams} />
+        </SidebarMenu>
+    )
 }
 
 
@@ -89,31 +130,27 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-2 p-2">
-                <Target className="h-7 w-7 text-primary" />
-                <span className="text-lg font-bold font-headline">Fitness Hub</span>
-            </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <NavItem href="/dashboard" icon={Home} label="Dashboard" />
-            <NavItem href="/dashboard/marketplace" icon={ShoppingCart} label="Marketplace" />
-            <NavItem href="/dashboard/my-workouts" icon={Dumbbell} label="My Workouts" />
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-            <SidebarMenu>
-                <NavItem href="/dashboard/settings" icon={Settings} label="Settings" />
-            </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <AppHeader />
-        <main className="flex-1 p-4 sm:px-6 sm:py-0">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+              <div className="flex items-center gap-2 p-2">
+                  <Target className="h-7 w-7 text-primary" />
+                  <span className="text-lg font-bold font-headline">Fitness Hub</span>
+              </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardNav />
+          </SidebarContent>
+          <SidebarFooter>
+            <SettingsNav />
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarInset>
+          <AppHeader />
+          <main className="flex-1 p-4 sm:px-6 sm:py-0">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </React.Suspense>
   );
 }
