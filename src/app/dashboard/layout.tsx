@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target } from 'lucide-react';
+import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 
@@ -100,6 +100,7 @@ const DashboardNav = () => {
         <SidebarMenu>
             <NavItem href="/dashboard" icon={Home} label="Dashboard" searchParams={navSearchParams} />
             {isAdmin && <NavItem href="/dashboard/analytics" icon={BarChart3} label="Analytics" searchParams={navSearchParams} />}
+            {isAdmin && <NavItem href="/dashboard/products" icon={Package} label="Products" searchParams={navSearchParams} />}
             <NavItem href="/dashboard/marketplace" icon={ShoppingCart} label="Marketplace" searchParams={navSearchParams} />
             <NavItem href="/dashboard/my-workouts" icon={Dumbbell} label="My Workouts" searchParams={navSearchParams} />
         </SidebarMenu>
