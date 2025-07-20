@@ -72,12 +72,12 @@ const NavItem = ({ href, icon: Icon, label }: { href: string, icon: React.Elemen
 
     return (
         <SidebarMenuItem>
-            <Link href={href} passHref>
-                <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+            <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
+                <Link href={href}>
                     <Icon />
                     <span>{label}</span>
-                </SidebarMenuButton>
-            </Link>
+                </Link>
+            </SidebarMenuButton>
         </SidebarMenuItem>
     );
 }
