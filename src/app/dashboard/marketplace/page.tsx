@@ -39,15 +39,12 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
 
     return (
         <Card className="flex flex-col">
-            <div className="relative h-48 w-full">
-                <img 
-                    src={item.imageUrl || "https://placehold.co/600x400"}
-                    alt={item.name}
-                    className="rounded-t-lg object-cover" 
-                    data-ai-hint="fitness product"
-                />
-                <Badge variant="secondary" className="absolute top-2 right-2">{getTag()}</Badge>
-            </div>
+            <img 
+                src={item.imageUrl || "https://placehold.co/600x400"}
+                alt={item.name}
+                className="w-full h-48 object-cover rounded-t-lg"
+                data-ai-hint="fitness product"
+            />
             <CardHeader>
                  <h3 className="font-semibold text-lg">{item.name}</h3>
             </CardHeader>

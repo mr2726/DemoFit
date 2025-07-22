@@ -86,14 +86,12 @@ export default function MyWorkoutsPage() {
                 {workouts.length > 0 ? (
                     workouts.map((plan) => (
                         <Card key={plan.id} className="flex flex-col">
-                            <div className="relative h-48 w-full">
-                                <img
-                                    src={plan.imageUrl || "https://placehold.co/600x400"}
-                                    alt={plan.name}
-                                    className="rounded-t-lg object-cover"
-                                    data-ai-hint="fitness workout"
-                                />
-                            </div>
+                            <img
+                                src={plan.imageUrl || "https://placehold.co/600x400"}
+                                alt={plan.name}
+                                className="w-full h-48 object-cover rounded-t-lg"
+                                data-ai-hint="fitness workout"
+                            />
                             <CardHeader>
                                 <CardTitle>{plan.name}</CardTitle>
                                 <CardDescription>{plan.description}</CardDescription>
