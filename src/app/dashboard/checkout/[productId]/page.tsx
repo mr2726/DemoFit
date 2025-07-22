@@ -126,10 +126,9 @@ export default function CheckoutPage() {
                 <div>
                     <Card>
                         <div className="relative h-48 w-full">
-                            <Image 
+                            <img 
                                 src={product.imageUrl || "https://placehold.co/600x400"} 
-                                alt={product.name} 
-                                fill
+                                alt={product.name}
                                 className="rounded-t-lg object-cover" 
                             />
                         </div>

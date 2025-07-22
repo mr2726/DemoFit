@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
 import { Dumbbell, Apple, Package, Star, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
@@ -41,10 +40,9 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
     return (
         <Card className="flex flex-col">
             <div className="relative h-48 w-full">
-                <Image 
-                    src={item.imageUrl || "https://placehold.co/600x400"} 
-                    alt={item.name} 
-                    fill
+                <img 
+                    src={item.imageUrl || "https://placehold.co/600x400"}
+                    alt={item.name}
                     className="rounded-t-lg object-cover" 
                     data-ai-hint="fitness product"
                 />
@@ -54,12 +52,9 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
                  <h3 className="font-semibold text-lg">{item.name}</h3>
             </CardHeader>
             <CardContent className="flex-1 p-4 pt-0">
-                <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                    <Star className="w-4 h-4 fill-accent text-accent" />
-                    <span>4.8 (2.1k reviews)</span>
-                </div>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
             </CardContent>
-            <CardFooter className="p-4 pt-0 flex justify-between items-center">
+            <CardFooter className="p-4 pt-0 flex justify-between items-center mt-auto">
                 <span className="text-2xl font-bold">${item.price.toFixed(2)}</span>
                 <Button asChild>
                     <Link href={`/dashboard/checkout/${item.id}`}>Buy Now</Link>

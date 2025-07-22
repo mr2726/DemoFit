@@ -67,9 +67,8 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
     if (source.startsWith('http')) {
         return (
             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
-                <Image 
+                <img 
                     src={source}
-                    fill
                     alt={exercise?.name || workout.name} 
                     className="rounded-lg object-cover" 
                     data-ai-hint="fitness exercise" 
