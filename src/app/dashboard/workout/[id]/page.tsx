@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, SkipForward, Repeat, CheckCircle2, Loader2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Repeat, CheckCircle2, Loader2, Video, FileText } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import Image from 'next/image';
 import { doc, getDoc } from 'firebase/firestore';
@@ -33,6 +32,63 @@ interface WorkoutPlan {
 const WORK_SECONDS = 45;
 const REST_SECONDS = 15;
 
+const getYoutubeVideoId = (url: string) => {
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            return urlObj.pathname.slice(1);
+        }
+        if (urlObj.hostname.includes('youtube.com')) {
+            return urlObj.searchParams.get('v');
+        }
+    } catch (e) {
+        // Not a valid URL
+    }
+    return null;
+}
+
+const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: WorkoutPlan }) => {
+    if (!exercise) {
+        return (
+             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
+                 <Image src={workout.imageUrl || "https://placehold.co/1280x720"} layout="fill" objectFit='cover' alt="Workout placeholder" className="rounded-lg" data-ai-hint="fitness workout" />
+             </div>
+        )
+    }
+
+    const videoId = getYoutubeVideoId(exercise.videoOrDescription);
+
+    if (videoId) {
+        return (
+            <div className="w-full aspect-video rounded-lg overflow-hidden">
+                <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/${videoId}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+            </div>
+        )
+    }
+    
+    if (exercise.videoOrDescription.startsWith('http')) {
+        return (
+            <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
+                <Image src={exercise.videoOrDescription} layout="fill" objectFit='cover' alt={exercise.name} className="rounded-lg" data-ai-hint="fitness exercise" />
+            </div>
+        )
+    }
+
+    return (
+         <div className="w-full aspect-video bg-muted rounded-lg flex flex-col items-center justify-center p-4">
+            <FileText className="w-16 h-16 text-muted-foreground mb-4"/>
+            <p className="text-muted-foreground text-center">{exercise.videoOrDescription}</p>
+        </div>
+    )
+}
+
 export default function WorkoutPlayerPage() {
   const params = useParams();
   const workoutId = params.id as string;
@@ -56,7 +112,6 @@ export default function WorkoutPlayerPage() {
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // Firestore doesn't store a top-level ID, and exercises need unique IDs for keys
                 const exercisesWithIds = (data.exercises || []).map((ex: Omit<Exercise, 'id'>, index: number) => ({ ...ex, id: `${workoutId}-ex-${index}` }));
                 setWorkout({ id: docSnap.id, ...data, exercises: exercisesWithIds } as WorkoutPlan);
             } else {
@@ -162,18 +217,7 @@ export default function WorkoutPlayerPage() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col">
              <div className="w-full aspect-video bg-muted rounded-lg mb-4 flex items-center justify-center relative">
-                <Image 
-                    src={currentExercise?.videoOrDescription && (currentExercise.videoOrDescription.startsWith('http') || currentExercise.videoOrDescription.startsWith('/')) ? currentExercise.videoOrDescription : workout.imageUrl || "https://placehold.co/1280x720"} 
-                    layout="fill" 
-                    objectFit='cover' 
-                    alt="Workout video placeholder" 
-                    className="rounded-lg" 
-                    data-ai-hint="fitness workout" 
-                />
-                <div className="absolute inset-0 bg-black/30 rounded-lg"></div>
-                <Button variant="ghost" size="icon" className="absolute h-20 w-20 text-white hover:bg-white/20 hover:text-white">
-                    <Play className="h-12 w-12 fill-white"/>
-                </Button>
+                <MediaDisplay exercise={currentExercise} workout={workout} />
             </div>
              {isFinished ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 bg-green-500/10 rounded-lg text-center">
