@@ -26,7 +26,8 @@ const exerciseSchema = z.object({
     name: z.string().min(1, "Exercise name is required."),
     videoOrDescription: z.string().min(1, "Video link or description is required."),
     sets: z.coerce.number().int().min(1),
-    reps: z.string().min(1, "Reps/duration is required."),
+    reps: z.string().optional(),
+    duration: z.coerce.number().int().min(0).optional(),
     rest: z.coerce.number().int().min(0),
 });
 
@@ -268,12 +269,15 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                                  <FormField control={form.control} name={`exercises.${index}.videoOrDescription`} render={({ field }) => (
                                     <FormItem><FormLabel>Video URL or Description</FormLabel><FormControl><Textarea placeholder="Link to video or text description..." {...field}/></FormControl><FormMessage /></FormItem>
                                 )}/>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-4 gap-2">
                                     <FormField control={form.control} name={`exercises.${index}.sets`} render={({ field }) => (
                                         <FormItem><FormLabel>Sets</FormLabel><FormControl><Input type="number" placeholder="3" {...field}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`exercises.${index}.reps`} render={({ field }) => (
-                                        <FormItem><FormLabel>Reps/Duration</FormLabel><FormControl><Input placeholder="12 reps or 60s" {...field}/></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Reps</FormLabel><FormControl><Input placeholder="12" {...field}/></FormControl><FormMessage /></FormItem>
+                                    )}/>
+                                    <FormField control={form.control} name={`exercises.${index}.duration`} render={({ field }) => (
+                                        <FormItem><FormLabel>Work (sec)</FormLabel><FormControl><Input type="number" placeholder="45" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`exercises.${index}.rest`} render={({ field }) => (
                                         <FormItem><FormLabel>Rest (sec)</FormLabel><FormControl><Input type="number" placeholder="60" {...field}/></FormControl><FormMessage /></FormItem>
@@ -284,7 +288,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                         </Card>
                     ))}
                     </div>
-                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendExercise({ name: '', videoOrDescription: '', sets: 3, reps: '12', rest: 60 })}>
+                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendExercise({ name: '', videoOrDescription: '', sets: 3, rest: 60 })}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Exercise
                     </Button>
                 </div>
@@ -352,4 +356,3 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
     </Form>
   )
 }
-

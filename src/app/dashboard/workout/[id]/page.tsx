@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, SkipForward, Repeat, CheckCircle2, Loader2, Video, FileText } from 'lucide-react';
+import { Play, Pause, SkipForward, Repeat, CheckCircle2, Loader2, FileText } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import Image from 'next/image';
 import { doc, getDoc } from 'firebase/firestore';
@@ -16,7 +16,8 @@ interface Exercise {
     id: string;
     name: string;
     sets: number;
-    reps: string;
+    reps?: string;
+    duration?: number;
     videoOrDescription: string;
     rest: number;
 }
@@ -28,9 +29,6 @@ interface WorkoutPlan {
     imageUrl?: string;
     exercises: Exercise[];
 }
-
-const WORK_SECONDS = 45;
-const REST_SECONDS = 15;
 
 const getYoutubeVideoId = (url: string) => {
     try {
@@ -97,10 +95,12 @@ export default function WorkoutPlayerPage() {
   const { toast } = useToast();
 
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentSet, setCurrentSet] = useState(1);
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
-  const [timer, setTimer] = useState(WORK_SECONDS);
+  const [timer, setTimer] = useState(0);
   const [isWorkPhase, setIsWorkPhase] = useState(true);
   const [isActive, setIsActive] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
     const fetchWorkout = async () => {
@@ -113,7 +113,11 @@ export default function WorkoutPlayerPage() {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const exercisesWithIds = (data.exercises || []).map((ex: Omit<Exercise, 'id'>, index: number) => ({ ...ex, id: `${workoutId}-ex-${index}` }));
-                setWorkout({ id: docSnap.id, ...data, exercises: exercisesWithIds } as WorkoutPlan);
+                const fetchedWorkout = { id: docSnap.id, ...data, exercises: exercisesWithIds } as WorkoutPlan;
+                setWorkout(fetchedWorkout);
+                if (fetchedWorkout.exercises.length > 0) {
+                    setTimer(fetchedWorkout.exercises[0].duration || 0);
+                }
             } else {
                 toast({ title: "Error", description: "Workout plan not found.", variant: "destructive" });
             }
@@ -129,57 +133,81 @@ export default function WorkoutPlayerPage() {
   }, [workoutId, toast]);
   
   const exercises = workout?.exercises || [];
+  const currentExercise = exercises[currentExerciseIndex];
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isActive && timer > 0) {
+    if (isActive && !isFinished) {
       interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
-    } else if (isActive && timer === 0) {
-      if (isWorkPhase) {
-        if(exercises.length > 0) {
-            setCompletedExercises(prev => new Set(prev).add(exercises[currentExerciseIndex].id));
+    } 
+    
+    if (timer < 0) { // Changed from === 0 to < 0 to avoid skipping
+        if (isWorkPhase) { // Work is done, start rest
+            setIsWorkPhase(false);
+            setTimer(currentExercise?.rest || 0);
+        } else { // Rest is done, start next set or exercise
+            if (currentSet < (currentExercise?.sets || 1)) {
+                // Go to next set
+                setCurrentSet(prev => prev + 1);
+                setIsWorkPhase(true);
+                setTimer(currentExercise?.duration || 0);
+            } else {
+                // All sets for this exercise are done, mark as complete
+                if (currentExercise) {
+                    setCompletedExercises(prev => new Set(prev).add(currentExercise.id));
+                }
+                handleNext();
+            }
         }
-        setIsWorkPhase(false);
-        const currentRest = exercises[currentExerciseIndex]?.rest || REST_SECONDS;
-        setTimer(currentRest);
-      } else {
-        handleNext();
-      }
     }
+
+    if (isActive && isWorkPhase && timer === 0 && (currentExercise?.duration === 0 || !currentExercise?.duration)) {
+        // Skip work phase if duration is 0
+        setIsWorkPhase(false);
+        setTimer(currentExercise?.rest || 0);
+    }
+
     return () => {
       if (interval) clearInterval(interval);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, timer, isWorkPhase, currentExerciseIndex, exercises]);
+  }, [isActive, timer, isWorkPhase, currentExerciseIndex, currentSet, isFinished, currentExercise]);
+
+
+  const startWorkout = () => {
+    if (exercises.length === 0) return;
+    setIsActive(true);
+    setIsWorkPhase(true);
+    setCurrentExerciseIndex(0);
+    setCurrentSet(1);
+    setCompletedExercises(new Set());
+    setIsFinished(false);
+    setTimer(exercises[0].duration || 0);
+  }
 
   const handleToggle = () => {
-    if (exercises.length === 0) return;
+    if (isFinished || exercises.length === 0) return;
     setIsActive(!isActive);
   }
   
   const handleReset = () => {
-    if (exercises.length === 0) return;
     setIsActive(false);
-    setIsWorkPhase(true);
-    setTimer(WORK_SECONDS);
+    startWorkout();
   };
   
   const handleNext = () => {
-    if (exercises.length === 0) return;
-    const nextIndex = (currentExerciseIndex + 1);
+    const nextIndex = currentExerciseIndex + 1;
     if (nextIndex >= exercises.length) {
-        // Workout finished
+        setIsFinished(true);
         setIsActive(false);
-        setCurrentExerciseIndex(0); // Optionally reset to start
     } else {
         setCurrentExerciseIndex(nextIndex);
+        setCurrentSet(1);
+        setIsWorkPhase(true);
+        setTimer(exercises[nextIndex].duration || 0);
+        setIsActive(true);
     }
-    
-    setIsActive(true); // Auto-start next exercise
-    setIsWorkPhase(true);
-    setTimer(WORK_SECONDS);
   };
 
   if (loading) {
@@ -203,10 +231,11 @@ export default function WorkoutPlayerPage() {
     )
   }
 
-  const currentExercise = exercises[currentExerciseIndex];
-  const totalSeconds = isWorkPhase ? WORK_SECONDS : (currentExercise?.rest || REST_SECONDS);
-  const progress = ( (totalSeconds - timer) / totalSeconds) * 100;
-  const isFinished = completedExercises.size === exercises.length && exercises.length > 0;
+  const totalSeconds = isWorkPhase ? (currentExercise?.duration || 0) : (currentExercise?.rest || 0);
+  const progress = totalSeconds > 0 ? ((totalSeconds - timer) / totalSeconds) * 100 : 0;
+  
+  const repDisplay = currentExercise?.reps ? `x ${currentExercise.reps}` : '';
+  const setInfo = currentExercise ? `Set ${currentSet} / ${currentExercise.sets} ${repDisplay}` : '';
 
   return (
     <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
@@ -224,22 +253,16 @@ export default function WorkoutPlayerPage() {
                     <CheckCircle2 className="h-16 w-16 text-green-500 mb-4" />
                     <h2 className="text-3xl font-bold">Workout Complete!</h2>
                     <p className="text-muted-foreground">Great job! You've completed all exercises.</p>
-                     <Button size="lg" className="mt-6" onClick={() => {
-                         setCurrentExerciseIndex(0);
-                         setCompletedExercises(new Set());
-                         setIsActive(false);
-                         setIsWorkPhase(true);
-                         setTimer(WORK_SECONDS);
-                     }}>Start Over</Button>
+                     <Button size="lg" className="mt-6" onClick={handleReset}>Start Over</Button>
                 </div>
             ) : currentExercise ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted/50 rounded-lg text-center">
                     <h2 className="text-4xl font-bold tracking-tighter mb-2">{currentExercise.name}</h2>
-                    <p className="text-2xl text-muted-foreground">{currentExercise.sets} sets x {currentExercise.reps} reps</p>
+                    <p className="text-2xl text-muted-foreground">{setInfo}</p>
                     
                     <div className="my-8">
                         <p className="text-lg uppercase tracking-widest text-primary font-semibold">{isWorkPhase ? 'Work' : 'Rest'}</p>
-                        <p className="text-8xl font-mono font-bold tracking-tighter">{timer}</p>
+                        <p className="text-8xl font-mono font-bold tracking-tighter">{Math.max(0, timer)}</p>
                     </div>
 
                     <Progress value={progress} className="w-full max-w-md h-2" />
@@ -254,8 +277,9 @@ export default function WorkoutPlayerPage() {
                 </div>
              ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted/50 rounded-lg text-center">
-                    <h2 className="text-2xl font-bold">No Exercises Found</h2>
-                    <p className="text-muted-foreground">This workout plan doesn't have any exercises yet.</p>
+                    <h2 className="text-2xl font-bold">Ready to Start?</h2>
+                    <p className="text-muted-foreground mb-6">Press start to begin your workout.</p>
+                    <Button size="lg" onClick={startWorkout}><Play className="mr-2 h-5 w-5"/>Start Workout</Button>
                 </div>
              )}
           </CardContent>
@@ -272,7 +296,14 @@ export default function WorkoutPlayerPage() {
               {exercises.map((exercise, index) => (
                 <button
                   key={exercise.id}
-                  onClick={() => setCurrentExerciseIndex(index)}
+                  onClick={() => {
+                      setCurrentExerciseIndex(index);
+                      setCurrentSet(1);
+                      setIsWorkPhase(true);
+                      setTimer(exercise.duration || 0);
+                      setIsActive(true);
+                      setIsFinished(false);
+                  }}
                   className={`w-full text-left p-4 rounded-lg transition-colors ${currentExerciseIndex === index ? 'bg-primary/10' : 'hover:bg-muted'}`}
                 >
                   <div className="flex items-center">
@@ -282,7 +313,7 @@ export default function WorkoutPlayerPage() {
                     }
                     <div>
                       <p className="font-semibold">{exercise.name}</p>
-                      <p className="text-sm text-muted-foreground">{exercise.sets} sets x {exercise.reps} reps</p>
+                      <p className="text-sm text-muted-foreground">{exercise.sets} sets x {exercise.reps || `${exercise.duration}s`}</p>
                     </div>
                   </div>
                 </button>
@@ -290,7 +321,7 @@ export default function WorkoutPlayerPage() {
             </div>
           </ScrollArea>
           <div className="p-6 border-t">
-              <Button size="lg" className="w-full" onClick={() => setCompletedExercises(new Set(exercises.map(e => e.id)))}>Finish Workout</Button>
+              <Button size="lg" className="w-full" onClick={() => setIsFinished(true)}>Finish Workout</Button>
           </div>
         </CardContent>
       </Card>
