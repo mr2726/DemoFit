@@ -27,7 +27,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 export default function CheckoutPage({ params }: { params: { productId: string } }) {
     const [clientSecret, setClientSecret] = useState('');
     const [product, setProduct] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loadingProduct, setLoadingProduct] = useState(true);
+    const [loadingStripe, setLoadingStripe] = useState(true);
     const { toast } = useToast();
     const { user } = useAuth();
     const { productId } = params;
@@ -35,7 +36,8 @@ export default function CheckoutPage({ params }: { params: { productId: string }
     useEffect(() => {
         const fetchProductAndCreateIntent = async () => {
             if (!productId || !user) return;
-
+            
+            setLoadingProduct(true);
             try {
                 // Fetch product details from Firestore
                 const productRef = doc(db, 'products', productId);
@@ -43,10 +45,12 @@ export default function CheckoutPage({ params }: { params: { productId: string }
 
                 if (!productSnap.exists()) {
                     toast({ title: "Error", description: "Product not found", variant: "destructive" });
+                    setLoadingProduct(false);
                     return;
                 }
                 const productData = { id: productSnap.id, ...productSnap.data() } as Product;
                 setProduct(productData);
+                setLoadingProduct(false);
 
                 // Create Payment Intent
                 const res = await createPaymentIntent(productData, user.uid);
@@ -58,13 +62,18 @@ export default function CheckoutPage({ params }: { params: { productId: string }
             } catch (error) {
                 console.error("Error setting up payment:", error);
                 toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-            } finally {
-                setLoading(false);
+                setLoadingProduct(false);
             }
         };
 
         fetchProductAndCreateIntent();
     }, [productId, toast, user]);
+
+    useEffect(() => {
+        if (clientSecret) {
+            setLoadingStripe(false);
+        }
+    }, [clientSecret]);
 
     const appearance = {
         theme: 'night',
@@ -83,12 +92,25 @@ export default function CheckoutPage({ params }: { params: { productId: string }
         appearance,
     };
 
-    if (loading || !product) {
+    if (loadingProduct) {
         return (
             <div className="flex h-[calc(100vh-8rem)] w-full items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         );
+    }
+
+    if (!product) {
+        return (
+             <div className="flex h-[calc(100vh-8rem)] w-full items-center justify-center">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Product not found</CardTitle>
+                        <CardDescription>This product could not be loaded. Please go back and try again.</CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        )
     }
 
     return (
@@ -118,8 +140,12 @@ export default function CheckoutPage({ params }: { params: { productId: string }
                         </CardContent>
                     </Card>
                 </div>
-                <div>
-                    {clientSecret && (
+                <div className="min-h-[300px] flex flex-col justify-center">
+                    {loadingStripe || !clientSecret ? (
+                         <div className="flex items-center justify-center h-full">
+                            <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                    ) : (
                         <Elements options={options} stripe={stripePromise}>
                             <CheckoutForm />
                         </Elements>

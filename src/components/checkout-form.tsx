@@ -1,7 +1,7 @@
 
 'use client';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,13 @@ export default function CheckoutForm() {
     const { toast } = useToast();
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isStripeReady, setIsStripeReady] = useState(false);
+
+    useEffect(() => {
+        if (stripe && elements) {
+            setIsStripeReady(true);
+        }
+    }, [stripe, elements]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -31,6 +38,11 @@ export default function CheckoutForm() {
             },
         });
 
+        // This point will only be reached if there is an immediate error when
+        // confirming the payment. Otherwise, your customer will be redirected to
+        // your `return_url`. For some payment methods like iDEAL, your customer will
+        // be redirected to an intermediate site first to authorize the payment, then
+        // redirected to the `return_url`.
         if (error.type === "card_error" || error.type === "validation_error") {
              toast({
                 title: "Payment failed",
@@ -51,7 +63,7 @@ export default function CheckoutForm() {
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <PaymentElement />
-            <Button disabled={isLoading || !stripe || !elements} className="w-full" size="lg">
+            <Button disabled={isLoading || !isStripeReady} className="w-full" size="lg">
                 {isLoading ? <Loader2 className="animate-spin" /> : `Pay Now`}
             </Button>
         </form>
