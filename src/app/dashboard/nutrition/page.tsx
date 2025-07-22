@@ -163,12 +163,14 @@ export default function NutritionTrackingPage() {
                     {nutritionPlans.length > 0 ? (
                         nutritionPlans.map((plan) => (
                             <Card key={plan.id} className="flex flex-col">
-                                <img
-                                    src={plan.imageUrl || "https://placehold.co/600x400"}
-                                    alt={plan.name}
-                                    className="w-full h-48 object-cover rounded-t-lg"
-                                    data-ai-hint="nutrition food"
-                                />
+                                <div className="h-48 w-full overflow-hidden rounded-t-lg">
+                                    <img
+                                        src={plan.imageUrl || "https://placehold.co/600x400"}
+                                        alt={plan.name}
+                                        className="h-full w-full object-cover"
+                                        data-ai-hint="nutrition food"
+                                    />
+                                </div>
                                 <CardHeader>
                                     <CardTitle>{plan.name}</CardTitle>
                                     <CardDescription>{plan.totalKcal} kcal</CardDescription>
