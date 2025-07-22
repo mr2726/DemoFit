@@ -12,9 +12,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     const { toast } = useToast();
     const [initialData, setInitialData] = useState<ProductFormValues | null>(null);
     const [loading, setLoading] = useState(true);
-    const { id } = params;
     
     useEffect(() => {
+        const id = params.id;
         if (!id) return;
         
         const fetchProduct = async () => {
@@ -45,11 +45,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         };
 
         fetchProduct();
-    }, [id, router, toast]);
+    }, [params.id, router, toast]);
 
     const handleFormSubmit = async (data: ProductFormValues) => {
         try {
-            const docRef = doc(db, "products", id);
+            const docRef = doc(db, "products", params.id);
             await updateDoc(docRef, data);
             toast({
                 title: "Success",
@@ -82,7 +82,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         <div className="space-y-6">
             <header>
                 <h1 className="text-3xl font-bold font-headline">Edit Product</h1>
-                <p className="text-muted-foreground">Update the details for product ID: {id}</p>
+                <p className="text-muted-foreground">Update the details for product ID: {params.id}</p>
             </header>
             <ProductForm 
                 onSubmit={handleFormSubmit} 

@@ -33,7 +33,6 @@ const WORK_SECONDS = 45;
 const REST_SECONDS = 15;
 
 export default function WorkoutPlayerPage({ params }: { params: { id: string } }) {
-  const { id: workoutId } = params;
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -46,6 +45,7 @@ export default function WorkoutPlayerPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     const fetchWorkout = async () => {
+        const workoutId = params.id;
         if (!workoutId) return;
         setLoading(true);
         try {
@@ -69,7 +69,7 @@ export default function WorkoutPlayerPage({ params }: { params: { id: string } }
     };
 
     fetchWorkout();
-  }, [workoutId, toast]);
+  }, [params.id, toast]);
   
   const exercises = workout?.exercises || [];
 
