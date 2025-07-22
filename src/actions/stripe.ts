@@ -16,7 +16,7 @@ interface Product {
     imageUrl?: string;
 }
 
-export async function createPaymentIntent(product: Product) {
+export async function createPaymentIntent(product: Product, userId: string) {
     if (!process.env.STRIPE_SECRET_KEY) {
         throw new Error('STRIPE_SECRET_KEY is not set in the environment variables.');
     }
@@ -31,6 +31,7 @@ export async function createPaymentIntent(product: Product) {
         metadata: {
             productId: product.id,
             productName: product.name,
+            userId: userId,
         }
     });
 
@@ -49,6 +50,7 @@ export async function getPaymentIntent(paymentIntentId: string) {
             status: paymentIntent.status,
             amount: paymentIntent.amount,
             currency: paymentIntent.currency,
+            metadata: paymentIntent.metadata,
         };
     } catch (error) {
         console.error("Error retrieving payment intent:", error);

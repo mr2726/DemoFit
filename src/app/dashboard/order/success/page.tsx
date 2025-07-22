@@ -7,28 +7,63 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getPaymentIntent } from '@/actions/stripe';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+
 
 function SuccessContent() {
     const searchParams = useSearchParams();
     const paymentIntentId = searchParams.get('payment_intent');
     const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
 
     useEffect(() => {
-        if (paymentIntentId) {
-            getPaymentIntent(paymentIntentId)
-                .then((intent) => {
-                    if (intent) {
-                        setStatus(intent.status);
+        const verifyPayment = async () => {
+            if (!paymentIntentId) {
+                setLoading(false);
+                setStatus('error');
+                return;
+            }
+
+            try {
+                const intent = await getPaymentIntent(paymentIntentId);
+                if (intent) {
+                    setStatus(intent.status);
+
+                    if (intent.status === 'succeeded') {
+                        const { userId, productId } = intent.metadata;
+                        
+                        if (!userId || !productId) {
+                            throw new Error("Missing user or product ID in payment metadata.");
+                        }
+                        
+                        // Create a unique ID for the user_workout document to prevent duplicates
+                        const userWorkoutId = `${userId}_${productId}`;
+                        const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
+
+                        await setDoc(userWorkoutRef, {
+                            userId: userId,
+                            productId: productId,
+                            purchaseDate: serverTimestamp(),
+                            status: 'active'
+                        }, { merge: true }); // Use merge to avoid overwriting if it somehow exists
                     }
-                })
-                .catch(console.error)
-                .finally(() => setLoading(false));
-        } else {
-            setLoading(false);
-            setStatus('error');
-        }
-    }, [paymentIntentId]);
+                } else {
+                    setStatus('error');
+                }
+            } catch (error) {
+                console.error("Error during payment verification or db write:", error);
+                toast({ title: "Error", description: "An error occurred while confirming your purchase.", variant: "destructive" });
+                setStatus('error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyPayment();
+    }, [paymentIntentId, toast]);
 
     if (loading) {
         return (

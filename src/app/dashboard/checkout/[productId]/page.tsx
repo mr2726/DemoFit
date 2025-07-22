@@ -12,6 +12,7 @@ import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
+import { useAuth } from '@/contexts/auth-context';
 
 interface Product {
     id: string;
@@ -28,11 +29,12 @@ export default function CheckoutPage({ params }: { params: { productId: string }
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const { user } = useAuth();
     const { productId } = params;
 
     useEffect(() => {
         const fetchProductAndCreateIntent = async () => {
-            if (!productId) return;
+            if (!productId || !user) return;
 
             try {
                 // Fetch product details from Firestore
@@ -47,7 +49,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
                 setProduct(productData);
 
                 // Create Payment Intent
-                const res = await createPaymentIntent(productData);
+                const res = await createPaymentIntent(productData, user.uid);
                 if (res.clientSecret) {
                     setClientSecret(res.clientSecret);
                 } else {
@@ -62,7 +64,7 @@ export default function CheckoutPage({ params }: { params: { productId: string }
         };
 
         fetchProductAndCreateIntent();
-    }, [productId, toast]);
+    }, [productId, toast, user]);
 
     const appearance = {
         theme: 'night',
