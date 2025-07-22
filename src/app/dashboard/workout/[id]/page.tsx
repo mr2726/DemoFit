@@ -33,6 +33,7 @@ const WORK_SECONDS = 45;
 const REST_SECONDS = 15;
 
 export default function WorkoutPlayerPage({ params }: { params: { id: string } }) {
+  const { id: workoutId } = params;
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -45,16 +46,16 @@ export default function WorkoutPlayerPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     const fetchWorkout = async () => {
-        if (!params.id) return;
+        if (!workoutId) return;
         setLoading(true);
         try {
-            const docRef = doc(db, "products", params.id);
+            const docRef = doc(db, "products", workoutId);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 // Firestore doesn't store a top-level ID, and exercises need unique IDs for keys
-                const exercisesWithIds = (data.exercises || []).map((ex: Omit<Exercise, 'id'>, index: number) => ({ ...ex, id: `${params.id}-ex-${index}` }));
+                const exercisesWithIds = (data.exercises || []).map((ex: Omit<Exercise, 'id'>, index: number) => ({ ...ex, id: `${workoutId}-ex-${index}` }));
                 setWorkout({ id: docSnap.id, ...data, exercises: exercisesWithIds } as WorkoutPlan);
             } else {
                 toast({ title: "Error", description: "Workout plan not found.", variant: "destructive" });
@@ -68,7 +69,7 @@ export default function WorkoutPlayerPage({ params }: { params: { id: string } }
     };
 
     fetchWorkout();
-  }, [params.id, toast]);
+  }, [workoutId, toast]);
   
   const exercises = workout?.exercises || [];
 
