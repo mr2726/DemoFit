@@ -46,15 +46,8 @@ const getYoutubeVideoId = (url: string) => {
 }
 
 const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: WorkoutPlan }) => {
-    if (!exercise) {
-        return (
-             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
-                 <Image src={workout.imageUrl || "https://placehold.co/1280x720"} layout="fill" objectFit='cover' alt="Workout placeholder" className="rounded-lg" data-ai-hint="fitness workout" />
-             </div>
-        )
-    }
-
-    const videoId = getYoutubeVideoId(exercise.videoOrDescription);
+    const source = exercise?.videoOrDescription || workout.imageUrl || "https://placehold.co/1280x720";
+    const videoId = getYoutubeVideoId(source);
 
     if (videoId) {
         return (
@@ -68,23 +61,30 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
                     allowFullScreen
                 ></iframe>
             </div>
-        )
+        );
     }
     
-    if (exercise.videoOrDescription.startsWith('http')) {
+    if (source.startsWith('http')) {
         return (
             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
-                <Image src={exercise.videoOrDescription} layout="fill" objectFit='cover' alt={exercise.name} className="rounded-lg" data-ai-hint="fitness exercise" />
+                <Image 
+                    src={source}
+                    layout="fill" 
+                    objectFit='cover' 
+                    alt={exercise?.name || workout.name} 
+                    className="rounded-lg" 
+                    data-ai-hint="fitness exercise" 
+                />
             </div>
-        )
+        );
     }
 
     return (
          <div className="w-full aspect-video bg-muted rounded-lg flex flex-col items-center justify-center p-4">
             <FileText className="w-16 h-16 text-muted-foreground mb-4"/>
-            <p className="text-muted-foreground text-center">{exercise.videoOrDescription}</p>
+            <p className="text-muted-foreground text-center">{source}</p>
         </div>
-    )
+    );
 }
 
 export default function WorkoutPlayerPage() {
