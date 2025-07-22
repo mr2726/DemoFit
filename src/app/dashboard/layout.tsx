@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target, Package, Loader2 } from 'lucide-react';
+import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target, Package, Loader2, Apple } from 'lucide-react';
 import React from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { auth } from '@/lib/firebase';
@@ -103,6 +103,7 @@ const DashboardNav = () => {
             {isAdmin && <NavItem href="/dashboard/products" icon={Package} label="Products" />}
             <NavItem href="/dashboard/marketplace" icon={ShoppingCart} label="Marketplace" />
             <NavItem href="/dashboard/my-workouts" icon={Dumbbell} label="My Workouts" />
+            <NavItem href="/dashboard/nutrition" icon={Apple} label="Nutrition" />
         </SidebarMenu>
     )
 }
