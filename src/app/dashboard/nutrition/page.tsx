@@ -24,6 +24,8 @@ interface NutritionPlan {
 interface TrackingData {
     weight?: number;
     calories?: number;
+    userId: string;
+    date: string;
 }
 
 export default function NutritionTrackingPage() {
@@ -42,7 +44,7 @@ export default function NutritionTrackingPage() {
         const trackingDocRef = doc(db, 'user_tracking', `${user.uid}_${today}`);
         const docSnap = await getDoc(trackingDocRef);
         if (docSnap.exists()) {
-            const data = docSnap.data() as TrackingData;
+            const data = docSnap.data();
             setWeight(data.weight?.toString() || '');
             setCalories(data.calories?.toString() || '');
         }
@@ -99,7 +101,10 @@ export default function NutritionTrackingPage() {
         setIsSaving(true);
         try {
             const trackingDocRef = doc(db, 'user_tracking', `${user.uid}_${today}`);
-            const data: TrackingData = {};
+            const data: TrackingData = {
+                userId: user.uid,
+                date: today
+            };
             if (weight) data.weight = parseFloat(weight);
             if (calories) data.calories = parseInt(calories, 10);
             
@@ -163,14 +168,12 @@ export default function NutritionTrackingPage() {
                     {nutritionPlans.length > 0 ? (
                         nutritionPlans.map((plan) => (
                             <Card key={plan.id} className="flex flex-col">
-                                <div className="h-48 w-full overflow-hidden rounded-t-lg">
-                                    <img
-                                        src={plan.imageUrl || "https://placehold.co/600x400"}
-                                        alt={plan.name}
-                                        className="h-full w-full object-cover"
-                                        data-ai-hint="nutrition food"
-                                    />
-                                </div>
+                                <img
+                                    src={plan.imageUrl || "https://placehold.co/600x400"}
+                                    alt={plan.name}
+                                    className="w-full h-48 object-cover rounded-t-lg"
+                                    data-ai-hint="nutrition food"
+                                />
                                 <CardHeader>
                                     <CardTitle>{plan.name}</CardTitle>
                                     <CardDescription>{plan.totalKcal} kcal</CardDescription>
