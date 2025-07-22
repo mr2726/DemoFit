@@ -1,14 +1,16 @@
+
 'use client';
 import { ProductForm, ProductFormValues } from '@/components/product-form';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default function EditProductPage() {
+    const params = useParams();
+    const id = params.id as string;
     const router = useRouter();
     const { toast } = useToast();
     const [initialData, setInitialData] = useState<ProductFormValues | null>(null);

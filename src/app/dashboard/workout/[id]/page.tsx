@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'next/navigation';
 
 interface Exercise {
     id: string;
@@ -32,8 +33,9 @@ interface WorkoutPlan {
 const WORK_SECONDS = 45;
 const REST_SECONDS = 15;
 
-export default function WorkoutPlayerPage({ params }: { params: { id: string } }) {
-  const { id: workoutId } = params;
+export default function WorkoutPlayerPage() {
+  const params = useParams();
+  const workoutId = params.id as string;
   const [workout, setWorkout] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();

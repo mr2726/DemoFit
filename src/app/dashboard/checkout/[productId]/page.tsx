@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
+import { useParams } from 'next/navigation';
 
 interface Product {
     id: string;
@@ -24,8 +25,9 @@ interface Product {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-export default function CheckoutPage({ params }: { params: { productId: string } }) {
-    const { productId } = params;
+export default function CheckoutPage() {
+    const params = useParams();
+    const productId = params.productId as string;
     const [clientSecret, setClientSecret] = useState('');
     const [product, setProduct] = useState<Product | null>(null);
     const [loadingProduct, setLoadingProduct] = useState(true);
