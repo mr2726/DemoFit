@@ -98,11 +98,13 @@ export default function DashboardPage() {
             trackingRef,
             where("userId", "==", user.uid),
             where("date", ">=", format(sixMonthsAgo, 'yyyy-MM-dd')),
-            orderBy("date", "desc")
+            orderBy("date")
         );
         
         const querySnapshot = await getDocs(q);
-        const trackingDocs = querySnapshot.docs.map(d => ({...d.data(), id: d.id}));
+        // Sort documents by date in descending order in the client
+        const trackingDocs = querySnapshot.docs.map(d => ({...d.data(), id: d.id})).sort((a, b) => b.date.localeCompare(a.date));
+
 
         if (trackingDocs.length > 0) {
             // Current Weight
