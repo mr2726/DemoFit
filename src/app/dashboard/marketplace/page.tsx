@@ -40,21 +40,21 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
 
     return (
         <Card className="flex flex-col">
-            <CardHeader className="p-0">
-                <div className="relative h-48 w-full">
-                    <Image 
-                        src={item.imageUrl || "https://placehold.co/600x400"} 
-                        alt={item.name} 
-                        fill={true} 
-                        style={{objectFit:"cover"}} 
-                        className="rounded-t-lg" 
-                        data-ai-hint="fitness product"
-                    />
-                    <Badge variant="secondary" className="absolute top-2 right-2">{getTag()}</Badge>
-                </div>
+            <div className="relative h-48 w-full">
+                <Image 
+                    src={item.imageUrl || "https://placehold.co/600x400"} 
+                    alt={item.name} 
+                    fill={true} 
+                    style={{objectFit:"cover"}} 
+                    className="rounded-t-lg" 
+                    data-ai-hint="fitness product"
+                />
+                <Badge variant="secondary" className="absolute top-2 right-2">{getTag()}</Badge>
+            </div>
+            <CardHeader>
+                 <h3 className="font-semibold text-lg">{item.name}</h3>
             </CardHeader>
-            <CardContent className="flex-1 p-4">
-                <h3 className="font-semibold text-lg">{item.name}</h3>
+            <CardContent className="flex-1 p-4 pt-0">
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                     <Star className="w-4 h-4 fill-accent text-accent" />
                     <span>4.8 (2.1k reviews)</span>

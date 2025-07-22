@@ -85,22 +85,22 @@ export default function MyWorkoutsPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {workouts.length > 0 ? (
                     workouts.map((plan) => (
-                        <Card key={plan.id}>
+                        <Card key={plan.id} className="flex flex-col">
+                            <div className="relative h-40 w-full">
+                                <Image
+                                    src={plan.imageUrl || "https://placehold.co/600x400"}
+                                    alt={plan.name}
+                                    fill={true}
+                                    objectFit="cover"
+                                    className="rounded-t-lg"
+                                    data-ai-hint="fitness workout"
+                                />
+                            </div>
                             <CardHeader>
-                                <div className="relative h-40 w-full">
-                                    <Image
-                                        src={plan.imageUrl || "https://placehold.co/600x400"}
-                                        alt={plan.name}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="rounded-t-lg"
-                                        data-ai-hint="fitness workout"
-                                    />
-                                </div>
-                                <CardTitle className="pt-4">{plan.name}</CardTitle>
+                                <CardTitle>{plan.name}</CardTitle>
                                 <CardDescription>{plan.description}</CardDescription>
                             </CardHeader>
-                            <CardFooter>
+                            <CardFooter className="mt-auto">
                                 <Button asChild className="w-full">
                                     <Link href={`/dashboard/workout/${plan.id}`}>
                                         <PlayCircle className="mr-2 h-4 w-4" />
