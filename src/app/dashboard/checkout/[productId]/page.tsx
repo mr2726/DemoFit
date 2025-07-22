@@ -125,13 +125,11 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                     <Card>
-                        <div className="relative h-48 w-full">
-                            <img 
-                                src={product.imageUrl || "https://placehold.co/600x400"} 
-                                alt={product.name}
-                                className="w-full h-full object-cover rounded-t-lg" 
-                            />
-                        </div>
+                        <img 
+                            src={product.imageUrl || "https://placehold.co/600x400"} 
+                            alt={product.name}
+                            className="w-full h-48 object-cover rounded-t-lg" 
+                        />
                         <CardHeader>
                              <CardTitle>{product.name}</CardTitle>
                         </CardHeader>
