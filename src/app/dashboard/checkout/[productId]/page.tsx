@@ -25,13 +25,14 @@ interface Product {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function CheckoutPage({ params }: { params: { productId: string } }) {
+    const { productId } = params;
     const [clientSecret, setClientSecret] = useState('');
     const [product, setProduct] = useState<Product | null>(null);
     const [loadingProduct, setLoadingProduct] = useState(true);
     const [loadingStripe, setLoadingStripe] = useState(true);
     const { toast } = useToast();
     const { user } = useAuth();
-    const { productId } = params;
+    
 
     useEffect(() => {
         const fetchProductAndCreateIntent = async () => {
