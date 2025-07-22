@@ -130,7 +130,7 @@ export default function CheckoutPage() {
                                 src={product.imageUrl || "https://placehold.co/600x400"} 
                                 alt={product.name} 
                                 fill={true} 
-                                style={{objectFit:"cover"}} 
+                                objectFit="cover" 
                                 className="rounded-t-lg" 
                             />
                         </div>

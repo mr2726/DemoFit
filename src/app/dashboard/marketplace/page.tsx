@@ -45,7 +45,7 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
                     src={item.imageUrl || "https://placehold.co/600x400"} 
                     alt={item.name} 
                     fill={true} 
-                    style={{objectFit:"cover"}} 
+                    objectFit="cover" 
                     className="rounded-t-lg" 
                     data-ai-hint="fitness product"
                 />

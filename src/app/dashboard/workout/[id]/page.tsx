@@ -70,7 +70,7 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
                 <Image 
                     src={source}
                     fill={true}
-                    style={{objectFit:'cover'}}
+                    objectFit='cover'
                     alt={exercise?.name || workout.name} 
                     className="rounded-lg" 
                     data-ai-hint="fitness exercise" 
