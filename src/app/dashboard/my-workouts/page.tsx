@@ -90,9 +90,8 @@ export default function MyWorkoutsPage() {
                                 <Image
                                     src={plan.imageUrl || "https://placehold.co/600x400"}
                                     alt={plan.name}
-                                    fill={true}
-                                    objectFit="cover"
-                                    className="rounded-t-lg"
+                                    fill
+                                    className="rounded-t-lg object-cover"
                                     data-ai-hint="fitness workout"
                                 />
                             </div>

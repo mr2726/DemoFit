@@ -44,9 +44,8 @@ const MarketplaceCard = ({ item }: { item: Product }) => {
                 <Image 
                     src={item.imageUrl || "https://placehold.co/600x400"} 
                     alt={item.name} 
-                    fill={true} 
-                    objectFit="cover" 
-                    className="rounded-t-lg" 
+                    fill
+                    className="rounded-t-lg object-cover" 
                     data-ai-hint="fitness product"
                 />
                 <Badge variant="secondary" className="absolute top-2 right-2">{getTag()}</Badge>

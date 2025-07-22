@@ -69,10 +69,9 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
                 <Image 
                     src={source}
-                    fill={true}
-                    objectFit='cover'
+                    fill
                     alt={exercise?.name || workout.name} 
-                    className="rounded-lg" 
+                    className="rounded-lg object-cover" 
                     data-ai-hint="fitness exercise" 
                 />
             </div>
