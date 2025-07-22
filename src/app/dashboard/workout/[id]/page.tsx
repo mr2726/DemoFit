@@ -137,43 +137,63 @@ export default function WorkoutPlayerPage() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isActive && !isFinished) {
+
+    if (isActive && !isFinished && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
-    } 
-    
-    if (timer < 0) { // Changed from === 0 to < 0 to avoid skipping
-        if (isWorkPhase) { // Work is done, start rest
-            setIsWorkPhase(false);
-            setTimer(currentExercise?.rest || 0);
-        } else { // Rest is done, start next set or exercise
-            if (currentSet < (currentExercise?.sets || 1)) {
-                // Go to next set
-                setCurrentSet(prev => prev + 1);
-                setIsWorkPhase(true);
-                setTimer(currentExercise?.duration || 0);
-            } else {
-                // All sets for this exercise are done, mark as complete
-                if (currentExercise) {
-                    setCompletedExercises(prev => new Set(prev).add(currentExercise.id));
-                }
-                handleNext();
-            }
-        }
-    }
-
-    if (isActive && isWorkPhase && timer === 0 && (currentExercise?.duration === 0 || !currentExercise?.duration)) {
-        // Skip work phase if duration is 0
+    } else if (isActive && !isFinished && timer === 0) {
+      if (isWorkPhase) {
         setIsWorkPhase(false);
         setTimer(currentExercise?.rest || 0);
+      } else {
+        // Rest is done, pause the timer and wait for user to continue
+        setIsActive(false); 
+      }
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timer, isWorkPhase, currentExerciseIndex, currentSet, isFinished, currentExercise]);
+  }, [isActive, timer, isFinished, isWorkPhase, currentExercise]);
 
+
+  const startNextPhase = () => {
+     if (currentSet < (currentExercise?.sets || 1)) {
+        setCurrentSet(prev => prev + 1);
+        setIsWorkPhase(true);
+        setTimer(currentExercise?.duration || 0);
+    } else {
+        if (currentExercise) {
+            setCompletedExercises(prev => new Set(prev).add(currentExercise.id));
+        }
+        handleNext();
+    }
+  }
+
+  const handleToggle = () => {
+    if (isFinished || exercises.length === 0) return;
+
+    if (isActive) { // Pausing
+        setIsActive(false);
+    } else { // Starting or resuming
+        if (timer > 0) { // Resuming a countdown
+             setIsActive(true);
+        } else { // Timer is 0, means we are starting a new phase
+            if (isWorkPhase) { // Starting a work phase
+                 setIsActive(true);
+                 if (!currentExercise?.duration || currentExercise.duration === 0) {
+                     // If work is 0, immediately switch to rest
+                     setIsWorkPhase(false);
+                     setTimer(currentExercise?.rest || 0);
+                 }
+            } else { // Starting next set/exercise after rest
+                startNextPhase();
+                setIsActive(true);
+            }
+        }
+    }
+  }
 
   const startWorkout = () => {
     if (exercises.length === 0) return;
@@ -184,11 +204,6 @@ export default function WorkoutPlayerPage() {
     setCompletedExercises(new Set());
     setIsFinished(false);
     setTimer(exercises[0].duration || 0);
-  }
-
-  const handleToggle = () => {
-    if (isFinished || exercises.length === 0) return;
-    setIsActive(!isActive);
   }
   
   const handleReset = () => {
@@ -237,6 +252,13 @@ export default function WorkoutPlayerPage() {
   const repDisplay = currentExercise?.reps ? `x ${currentExercise.reps}` : '';
   const setInfo = currentExercise ? `Set ${currentSet} / ${currentExercise.sets} ${repDisplay}` : '';
 
+  const getTimerDisplay = () => {
+      if (timer === 0 && !isActive && !isWorkPhase) {
+          return 'Ready?';
+      }
+      return Math.max(0, timer);
+  }
+
   return (
     <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
       <div className="lg:col-span-2 flex flex-col gap-6">
@@ -262,7 +284,7 @@ export default function WorkoutPlayerPage() {
                     
                     <div className="my-8">
                         <p className="text-lg uppercase tracking-widest text-primary font-semibold">{isWorkPhase ? 'Work' : 'Rest'}</p>
-                        <p className="text-8xl font-mono font-bold tracking-tighter">{Math.max(0, timer)}</p>
+                        <div className="text-8xl font-mono font-bold tracking-tighter">{getTimerDisplay()}</div>
                     </div>
 
                     <Progress value={progress} className="w-full max-w-md h-2" />
