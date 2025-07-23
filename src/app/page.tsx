@@ -4,10 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, PlayCircle, Target, Star, Twitter, Instagram, Facebook } from 'lucide-react';
+import { BarChart3, PlayCircle, Target, Star, Twitter, Instagram, Facebook, Users, Dumbbell, Zap } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 
 
 const LandingHeader = () => (
@@ -88,29 +89,118 @@ const faqItems = [
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <LandingHeader />
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="container mx-auto flex flex-col items-center justify-center px-4 py-20 text-center md:py-32">
-          <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
-            Transform Your Body, Elevate Your Life
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            Discover personalized fitness plans, expert nutrition guidance, and premium supplements. Your journey to a healthier you starts here.
-          </p>
-          <div className="mt-8 flex gap-4">
-            <Button size="lg" asChild>
-              <Link href="/login">Start Your Journey</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#features">Learn More</Link>
-            </Button>
-          </div>
+        {/* 1. Value Proposition & Main Offer (Hero) */}
+        <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center text-center text-white px-4">
+            <div className="absolute inset-0">
+                <Image
+                    src="https://placehold.co/1920x1080"
+                    alt="Athlete mid-workout"
+                    fill={true}
+                    objectFit="cover"
+                    className="opacity-40"
+                    data-ai-hint="athlete workout intense"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+            </div>
+            <div className="relative z-10">
+                 <h1 className="text-4xl font-bold tracking-tight md:text-6xl text-shadow-lg">
+                    Stop Guessing. Start Transforming.
+                  </h1>
+                  <p className="mt-4 max-w-2xl text-lg text-foreground/80">
+                    Unlock your potential with AI-driven workout plans, personalized nutrition guides, and premium supplements. Your all-in-one fitness solution awaits.
+                  </p>
+                  <div className="mt-8">
+                    <Button size="lg" asChild>
+                      <Link href="/login">Start Your Free Trial</Link>
+                    </Button>
+                  </div>
+            </div>
+        </section>
+
+        {/* 2. Social Proof */}
+        <section className="py-12 bg-background">
+            <div className="container mx-auto px-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <Users className="h-8 w-8 mx-auto text-primary mb-2" />
+                        <p className="text-2xl font-bold">10,000+</p>
+                        <p className="text-muted-foreground">Active Members</p>
+                    </div>
+                     <div>
+                        <Dumbbell className="h-8 w-8 mx-auto text-primary mb-2" />
+                        <p className="text-2xl font-bold">50+</p>
+                        <p className="text-muted-foreground">Unique Plans</p>
+                    </div>
+                     <div>
+                        <Zap className="h-8 w-8 mx-auto text-primary mb-2" />
+                        <p className="text-2xl font-bold">98%</p>
+                        <p className="text-muted-foreground">User Satisfaction</p>
+                    </div>
+                     <div>
+                        <Star className="h-8 w-8 mx-auto text-primary mb-2 fill-primary" />
+                        <p className="text-2xl font-bold">4.9/5</p>
+                        <p className="text-muted-foreground">Average Rating</p>
+                    </div>
+                </div>
+            </div>
         </section>
         
-        {/* Testimonials Section */}
-        <section className="bg-muted py-20 overflow-hidden">
+        {/* 3. Product Service or Features (Benefits & Advantages) */}
+        <section id="features" className="py-20 bg-muted">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold">The Last Fitness App You'll Ever Need</h2>
+                <p className="mt-2 text-muted-foreground">We combined cutting-edge technology with proven fitness principles.</p>
+            </div>
+            <div className="grid gap-8 md:grid-cols-3">
+              <Card className="text-center">
+                <CardHeader>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Target className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="mt-4">AI-Powered Plans</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Never plateau again. Our smart algorithm adjusts your workouts and nutrition based on your progress.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center">
+                <CardHeader>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <PlayCircle className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="mt-4">Interactive Player</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Stay motivated with video-guided exercises, automatic timers, and seamless progress tracking for every set.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center">
+                <CardHeader>
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <BarChart3 className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="mt-4">Track Everything</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Visualize your success. Monitor weight, calories, workout streaks, and personal bests, all in one dashboard.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Testimonials */}
+        <section className="py-20 overflow-hidden bg-background">
           <div className="container mx-auto px-4">
             <h2 className="text-center text-3xl font-bold">Loved by Our Community</h2>
             <Carousel
@@ -148,65 +238,16 @@ export default function LandingPage() {
             </Carousel>
           </div>
         </section>
-
-        {/* Features Section */}
-        <section id="features" className="py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-3xl font-bold">Why Fitness Hub?</h2>
-            <p className="mt-2 text-center text-muted-foreground">Everything you need to achieve your fitness goals.</p>
-            <div className="mt-12 grid gap-8 md:grid-cols-3">
-              <Card className="text-center">
-                <CardHeader>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Target className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="mt-4">Personalized Plans</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Get workout and meal plans tailored to your body and goals, designed by certified professionals.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardHeader>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <PlayCircle className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="mt-4">Interactive Player</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Follow along with video-guided workouts, timers, and progress tracking to stay motivated.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="text-center">
-                <CardHeader>
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <BarChart3 className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="mt-4">Track Your Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Visualize your success with detailed stats on weight, calories, and workout consistency.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
+        
+        {/* 5. Objection Handling (FAQs) */}
         <section className="bg-muted py-20">
             <div className="container mx-auto max-w-3xl px-4">
-                 <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
-                 <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
+                 <h2 className="text-center text-3xl font-bold">Your Questions, Answered</h2>
+                 <p className="mt-2 text-center text-muted-foreground">Clearing up the common concerns about joining Fitness Hub.</p>
                  <Accordion type="single" collapsible className="w-full mt-12">
                     {faqItems.map((item, index) => (
                         <AccordionItem key={index} value={`item-${index + 1}`}>
-                            <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
+                            <AccordionTrigger className="text-lg text-left">{item.question}</AccordionTrigger>
                             <AccordionContent className="text-muted-foreground">
                                 {item.answer}
                             </AccordionContent>
@@ -216,49 +257,60 @@ export default function LandingPage() {
             </div>
         </section>
         
-        {/* Contact Section */}
-        <section className="py-20">
+        {/* 6. Additional Call-to-Action */}
+         <section className="py-20 bg-primary text-primary-foreground">
             <div className="container mx-auto max-w-3xl px-4 text-center">
-                 <h2 className="text-center text-3xl font-bold">Get In Touch</h2>
-                 <p className="mt-2 text-center text-muted-foreground">Have questions or feedback? We'd love to hear from you.</p>
+                 <h2 className="text-center text-3xl font-bold">Ready to Build Your Best Body?</h2>
+                 <p className="mt-2 text-center text-primary-foreground/80 mx-auto max-w-xl">Join thousands of others who have transformed their lives with Fitness Hub. Your first week is on us.</p>
                  <div className="mt-8">
-                    <a href="mailto:contact@fitnesshub.com" className="text-lg text-primary hover:underline">
-                        contact@fitnesshub.com
-                    </a>
-                    <div className="flex justify-center gap-6 mt-6">
-                        <Link href="#" className="text-muted-foreground hover:text-primary">
-                            <Twitter className="h-6 w-6" />
-                            <span className="sr-only">Twitter</span>
-                        </Link>
-                         <Link href="#" className="text-muted-foreground hover:text-primary">
-                            <Instagram className="h-6 w-6" />
-                            <span className="sr-only">Instagram</span>
-                        </Link>
-                         <Link href="#" className="text-muted-foreground hover:text-primary">
-                            <Facebook className="h-6 w-6" />
-                            <span className="sr-only">Facebook</span>
-                        </Link>
-                    </div>
+                    <Button size="lg" variant="secondary" asChild>
+                      <Link href="/login">Claim Your Free Week</Link>
+                    </Button>
                  </div>
             </div>
         </section>
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t">
-        <div className="container mx-auto flex items-center justify-between px-4 py-6">
-          <p className="text-sm text-muted-foreground">&copy; 2024 Fitness Hub. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-              Terms of Service
-            </Link>
+      {/* 7. Simple Footer */}
+      <footer className="border-t bg-muted">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-6">
+            <div className="text-center sm:text-left">
+                <p className="text-sm text-muted-foreground">&copy; 2024 Fitness Hub. All rights reserved.</p>
+                <a href="mailto:contact@fitnesshub.com" className="text-sm text-muted-foreground hover:text-foreground">
+                    contact@fitnesshub.com
+                </a>
+            </div>
+            <div className="flex items-center gap-4">
+                 <div className="flex justify-center gap-4">
+                    <Link href="#" className="text-muted-foreground hover:text-primary">
+                        <Twitter className="h-5 w-5" />
+                        <span className="sr-only">Twitter</span>
+                    </Link>
+                     <Link href="#" className="text-muted-foreground hover:text-primary">
+                        <Instagram className="h-5 w-5" />
+                        <span className="sr-only">Instagram</span>
+                    </Link>
+                     <Link href="#" className="text-muted-foreground hover:text-primary">
+                        <Facebook className="h-5 w-5" />
+                        <span className="sr-only">Facebook</span>
+                    </Link>
+                </div>
+                <Separator orientation="vertical" className="h-6 bg-border" />
+                <div className="flex gap-4">
+                    <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
+                    Privacy Policy
+                    </Link>
+                    <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
+                    Terms of Service
+                    </Link>
+                </div>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
+    
+    
