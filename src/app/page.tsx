@@ -203,10 +203,10 @@ export default function LandingPage() {
         <div className="container mx-auto flex items-center justify-between px-4 py-6">
           <p className="text-sm text-muted-foreground">&copy; 2024 Fitness Hub. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
               Privacy Policy
             </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
               Terms of Service
             </Link>
           </div>
