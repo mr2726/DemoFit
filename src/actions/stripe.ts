@@ -13,6 +13,7 @@ interface Product {
     name: string;
     description: string;
     price: number;
+    category: "Workout Plan" | "Nutrition" | "Supplements";
     imageUrl?: string;
 }
 
@@ -29,9 +30,13 @@ export async function createPaymentIntent(product: Product, userId: string) {
         },
         description: `Purchase of ${product.name}`,
         metadata: {
+            userId: userId,
             productId: product.id,
             productName: product.name,
-            userId: userId,
+            productDescription: product.description,
+            productPrice: product.price.toString(),
+            category: product.category,
+            imageUrl: product.imageUrl || '',
         }
     });
 
@@ -51,6 +56,7 @@ export async function getPaymentIntent(paymentIntentId: string) {
             amount: paymentIntent.amount,
             currency: paymentIntent.currency,
             metadata: paymentIntent.metadata,
+            shipping: paymentIntent.shipping,
         };
     } catch (error) {
         console.error("Error retrieving payment intent:", error);

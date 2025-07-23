@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target, Package, Loader2, Apple } from 'lucide-react';
+import { Home, Dumbbell, ShoppingCart, BarChart3, Settings, LogOut, User, Target, Package, Loader2, Apple, ListOrdered, Truck } from 'lucide-react';
 import React from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { auth } from '@/lib/firebase';
@@ -79,7 +79,7 @@ const AppHeader = () => {
 
 const NavItem = ({ href, icon: Icon, label }: { href: string, icon: React.ElementType, label: string }) => {
     const pathname = usePathname();
-    const isActive = pathname === href;
+    const isActive = pathname.startsWith(href) && (href !== '/dashboard' || pathname === '/dashboard');
 
     return (
         <SidebarMenuItem>
@@ -101,9 +101,11 @@ const DashboardNav = () => {
             <NavItem href="/dashboard" icon={Home} label="Dashboard" />
             {isAdmin && <NavItem href="/dashboard/analytics" icon={BarChart3} label="Analytics" />}
             {isAdmin && <NavItem href="/dashboard/products" icon={Package} label="Products" />}
+            {isAdmin && <NavItem href="/dashboard/orders" icon={Truck} label="Manage Orders" />}
             <NavItem href="/dashboard/marketplace" icon={ShoppingCart} label="Marketplace" />
             <NavItem href="/dashboard/my-workouts" icon={Dumbbell} label="My Workouts" />
             <NavItem href="/dashboard/nutrition" icon={Apple} label="Nutrition" />
+            <NavItem href="/dashboard/my-orders" icon={ListOrdered} label="My Orders" />
         </SidebarMenu>
     )
 }

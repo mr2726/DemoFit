@@ -20,6 +20,7 @@ interface Product {
     name: string;
     description: string;
     price: number;
+    category: "Workout Plan" | "Nutrition" | "Supplements";
     imageUrl?: string;
 }
 
@@ -146,7 +147,7 @@ export default function CheckoutPage() {
                         </div>
                     ) : (
                         <Elements options={options} stripe={stripePromise}>
-                            <CheckoutForm />
+                            <CheckoutForm product={product} />
                         </Elements>
                     )}
                 </div>

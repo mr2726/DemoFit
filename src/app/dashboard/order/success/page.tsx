@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getPaymentIntent } from '@/actions/stripe';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 function SuccessContent() {
     const searchParams = useSearchParams();
     const paymentIntentId = searchParams.get('payment_intent');
+    const redirectStatus = searchParams.get('redirect_status');
     const [status, setStatus] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -29,26 +30,43 @@ function SuccessContent() {
 
             try {
                 const intent = await getPaymentIntent(paymentIntentId);
+
                 if (intent) {
                     setStatus(intent.status);
-
-                    if (intent.status === 'succeeded') {
-                        const { userId, productId } = intent.metadata;
+                    
+                    // If status is 'succeeded' and we have not processed this before.
+                    if (intent.status === 'succeeded' && redirectStatus === 'succeeded') {
+                        const { userId, productId, productName, productDescription, productPrice, imageUrl, category } = intent.metadata;
                         
                         if (!userId || !productId) {
                             throw new Error("Missing user or product ID in payment metadata.");
                         }
-                        
-                        // Create a unique ID for the user_workout document to prevent duplicates
-                        const userWorkoutId = `${userId}_${productId}`;
-                        const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
 
-                        await setDoc(userWorkoutRef, {
-                            userId: userId,
-                            productId: productId,
-                            purchaseDate: serverTimestamp(),
-                            status: 'active'
-                        }, { merge: true }); // Use merge to avoid overwriting if it somehow exists
+                        if(category === "Supplements") {
+                             // Create a new order document in the 'orders' collection.
+                            await addDoc(collection(db, 'orders'), {
+                                userId,
+                                productId,
+                                productName,
+                                productDescription,
+                                price: parseFloat(productPrice),
+                                imageUrl: imageUrl || null,
+                                shipping: intent.shipping,
+                                status: 'Processing', // Initial status
+                                purchaseDate: serverTimestamp(),
+                            });
+                        } else {
+                            // This is for Workout Plan or Nutrition
+                            const userWorkoutId = `${userId}_${productId}`;
+                            const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
+
+                            await setDoc(userWorkoutRef, {
+                                userId: userId,
+                                productId: productId,
+                                purchaseDate: serverTimestamp(),
+                                status: 'active'
+                            }, { merge: true });
+                        }
                     }
                 } else {
                     setStatus('error');
@@ -63,7 +81,7 @@ function SuccessContent() {
         };
 
         verifyPayment();
-    }, [paymentIntentId, toast]);
+    }, [paymentIntentId, redirectStatus, toast]);
 
     if (loading) {
         return (
@@ -84,7 +102,7 @@ function SuccessContent() {
                 </CardDescription>
                 <div className="mt-6 flex gap-4">
                     <Button asChild>
-                        <Link href="/dashboard/my-workouts">Go to My Workouts</Link>
+                        <Link href="/dashboard">Go to Dashboard</Link>
                     </Button>
                     <Button variant="outline" asChild>
                         <Link href="/dashboard/marketplace">Continue Shopping</Link>
