@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, PlayCircle, Target, Star } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
 const LandingHeader = () => (
@@ -64,6 +65,25 @@ const FiveStars = () => (
         <Star className="w-5 h-5 fill-current" />
     </div>
 );
+
+const faqItems = [
+    {
+        question: "Is Fitness Hub suitable for beginners?",
+        answer: "Absolutely! We offer a wide range of plans suitable for all fitness levels, including dedicated beginner programs. Each exercise comes with detailed instructions and video demonstrations to ensure you get started safely and effectively."
+    },
+    {
+        question: "How are the workout plans personalized?",
+        answer: "While our marketplace offers pre-designed expert plans, you can choose the ones that best fit your goals (e.g., weight loss, muscle gain, endurance). You track your progress, allowing you to see your improvements and decide when it's time to move to a more advanced plan."
+    },
+    {
+        question: "Can I use the app on multiple devices?",
+        answer: "Yes, your Fitness Hub account is synced across all your devices. You can log in on your phone, tablet, or computer to access your plans and track your progress anytime, anywhere."
+    },
+    {
+        question: "What if I have dietary restrictions?",
+        answer: "Our nutrition plans offer a variety of recipes. While we don't currently offer fully customized meal plans based on allergies, our recipe descriptions include detailed ingredient lists, allowing you to choose meals that fit your dietary needs."
+    }
+];
 
 
 export default function LandingPage() {
@@ -138,21 +158,21 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* Image Showcase */}
+        {/* FAQ Section */}
         <section className="py-20">
-            <div className="container mx-auto px-4">
-                <div className="relative h-96 w-full overflow-hidden rounded-lg shadow-2xl">
-                    <Image
-                        src="https://placehold.co/1200x600"
-                        alt="Fitness workout"
-                        layout="fill"
-                        objectFit="cover"
-                        data-ai-hint="fitness workout"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <h3 className="text-4xl font-bold text-white">Reach Your Peak Performance</h3>
-                    </div>
-                </div>
+            <div className="container mx-auto max-w-3xl px-4">
+                 <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
+                 <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
+                 <Accordion type="single" collapsible className="w-full mt-12">
+                    {faqItems.map((item, index) => (
+                        <AccordionItem key={index} value={`item-${index + 1}`}>
+                            <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
+                            <AccordionContent className="text-muted-foreground">
+                                {item.answer}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                 </Accordion>
             </div>
         </section>
 
