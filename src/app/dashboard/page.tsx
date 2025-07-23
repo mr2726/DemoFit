@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, getMonth } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, getMonth, isAfter, isWithinInterval } from 'date-fns';
 
 type ActivityData = {
   date: string;
@@ -43,28 +43,27 @@ export default function DashboardPage() {
     // Fetch workout activity
     const fetchActivity = async () => {
         const today = new Date();
-        const yearAgo = new Date();
-        yearAgo.setFullYear(today.getFullYear() - 1);
+        const yearAgo = subDays(today, 365);
         
         const userWorkoutsRef = collection(db, "user_workouts");
-        const q = query(
-            userWorkoutsRef, 
-            where("userId", "==", user.uid),
-            where("purchaseDate", ">=", Timestamp.fromDate(yearAgo))
-        );
+        const q = query(userWorkoutsRef, where("userId", "==", user.uid));
         const querySnapshot = await getDocs(q);
         
+        const allWorkouts = querySnapshot.docs.map(doc => doc.data());
+
         const activityMap = new Map<string, number>();
         let weeklyCount = 0;
         const oneWeekAgo = subDays(today, 7);
 
-        querySnapshot.forEach(doc => {
-            const purchaseDate = doc.data().purchaseDate.toDate();
-            const dateStr = format(purchaseDate, 'yyyy-MM-dd');
-            activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 1);
+        allWorkouts.forEach(workout => {
+            const purchaseDate = workout.purchaseDate.toDate();
+            if (isAfter(purchaseDate, yearAgo)) {
+                const dateStr = format(purchaseDate, 'yyyy-MM-dd');
+                activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 1);
 
-            if (purchaseDate >= oneWeekAgo) {
-                weeklyCount++;
+                if (isAfter(purchaseDate, oneWeekAgo)) {
+                    weeklyCount++;
+                }
             }
         });
 
@@ -76,14 +75,14 @@ export default function DashboardPage() {
             level: Math.min(4, count) as (0 | 1 | 2 | 3 | 4)
         }));
         
-        // This part is just to fill the calendar, might not be accurate
-         const fullData = Array.from({ length: 365 }, (_, i) => {
-            const date = new Date();
-            date.setDate(date.getDate() - 365 + i);
-            const dateStr = date.toISOString().slice(0, 10);
+        // This part is just to fill the calendar for display
+        const fullData: ActivityData[] = [];
+        for (let i = 0; i <= 365; i++) {
+            const date = subDays(today, 365 - i);
+            const dateStr = format(date, 'yyyy-MM-dd');
             const existing = data.find(d => d.date === dateStr);
-            return existing || { date: dateStr, count: 0, level: 0 };
-        });
+            fullData.push(existing || { date: dateStr, count: 0, level: 0 });
+        }
 
         setActivityData(fullData);
     };
@@ -94,16 +93,10 @@ export default function DashboardPage() {
         const sixMonthsAgo = subDays(today, 180);
         
         const trackingRef = collection(db, 'user_tracking');
-        const q = query(
-            trackingRef,
-            where("userId", "==", user.uid),
-            where("date", ">=", format(sixMonthsAgo, 'yyyy-MM-dd')),
-            orderBy("date", "desc")
-        );
+        const q = query(trackingRef, where("userId", "==", user.uid));
         
         const querySnapshot = await getDocs(q);
-        const trackingDocs = querySnapshot.docs.map(d => ({...d.data(), id: d.id}));
-
+        const trackingDocs = querySnapshot.docs.map(d => d.data()).sort((a, b) => b.date.localeCompare(a.date));
 
         if (trackingDocs.length > 0) {
             // Current Weight
@@ -115,8 +108,9 @@ export default function DashboardPage() {
             // Weight History (last 6 months)
             const monthlyAverages: { [key: string]: { total: number, count: number } } = {};
             trackingDocs.forEach(doc => {
-                if (doc.weight) {
-                    const monthKey = format(new Date(doc.date), 'yyyy-MM');
+                const docDate = new Date(doc.date);
+                if (doc.weight && isAfter(docDate, sixMonthsAgo)) {
+                    const monthKey = format(docDate, 'yyyy-MM');
                     if (!monthlyAverages[monthKey]) {
                         monthlyAverages[monthKey] = { total: 0, count: 0 };
                     }
@@ -130,7 +124,7 @@ export default function DashboardPage() {
             const weightChartData = sortedMonths.map(month => {
                 const data = monthlyAverages[month];
                 return {
-                    date: format(new Date(month), 'MMM'),
+                    date: format(new Date(`${month}-02`), 'MMM'), // Use day 2 to avoid timezone issues
                     weight: Math.round(data.total / data.count)
                 }
             });
