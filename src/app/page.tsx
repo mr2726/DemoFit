@@ -108,9 +108,49 @@ export default function LandingPage() {
             </Button>
           </div>
         </section>
+        
+        {/* Testimonials Section */}
+        <section className="bg-muted py-20 overflow-hidden">
+          <div className="container mx-auto px-4">
+            <h2 className="text-center text-3xl font-bold">Loved by Our Community</h2>
+            <Carousel
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[
+                    Autoplay({
+                        delay: 2000,
+                        stopOnInteraction: false,
+                    }),
+                ]}
+                className="w-full mt-12"
+            >
+                <CarouselContent>
+                    {testimonials.map((testimonial, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                             <div className="p-1">
+                                <Card>
+                                    <CardContent className="pt-6">
+                                        <div className="space-y-4">
+                                            <FiveStars />
+                                            <p className="text-muted-foreground italic">
+                                                "{testimonial.quote}"
+                                            </p>
+                                            <p className="font-semibold text-right">- {testimonial.name}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
+          </div>
+        </section>
 
         {/* Features Section */}
-        <section id="features" className="bg-muted py-20">
+        <section id="features" className="py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-center text-3xl font-bold">Why Fitness Hub?</h2>
             <p className="mt-2 text-center text-muted-foreground">Everything you need to achieve your fitness goals.</p>
@@ -157,49 +197,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        
-        {/* Testimonials Section */}
-        <section className="bg-muted py-20 overflow-hidden">
-          <div className="container mx-auto px-4">
-            <h2 className="text-center text-3xl font-bold">Loved by Our Community</h2>
-            <Carousel
-                opts={{
-                    align: "start",
-                    loop: true,
-                }}
-                plugins={[
-                    Autoplay({
-                        delay: 2000,
-                        stopOnInteraction: false,
-                    }),
-                ]}
-                className="w-full mt-12"
-            >
-                <CarouselContent>
-                    {testimonials.map((testimonial, index) => (
-                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                             <div className="p-1">
-                                <Card>
-                                    <CardContent className="pt-6">
-                                        <div className="space-y-4">
-                                            <FiveStars />
-                                            <p className="text-muted-foreground italic">
-                                                "{testimonial.quote}"
-                                            </p>
-                                            <p className="font-semibold text-right">- {testimonial.name}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-            </Carousel>
-          </div>
-        </section>
 
         {/* FAQ Section */}
-        <section className="py-20">
+        <section className="bg-muted py-20">
             <div className="container mx-auto max-w-3xl px-4">
                  <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
                  <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
