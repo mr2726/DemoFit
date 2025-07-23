@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, PlayCircle, Target, Star } from 'lucide-react';
+import { BarChart3, PlayCircle, Target, Star, Twitter, Instagram, Facebook } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -215,6 +215,34 @@ export default function LandingPage() {
                  </Accordion>
             </div>
         </section>
+        
+        {/* Contact Section */}
+        <section className="py-20">
+            <div className="container mx-auto max-w-3xl px-4 text-center">
+                 <h2 className="text-center text-3xl font-bold">Get In Touch</h2>
+                 <p className="mt-2 text-center text-muted-foreground">Have questions or feedback? We'd love to hear from you.</p>
+                 <div className="mt-8">
+                    <a href="mailto:contact@fitnesshub.com" className="text-lg text-primary hover:underline">
+                        contact@fitnesshub.com
+                    </a>
+                    <div className="flex justify-center gap-6 mt-6">
+                        <Link href="#" className="text-muted-foreground hover:text-primary">
+                            <Twitter className="h-6 w-6" />
+                            <span className="sr-only">Twitter</span>
+                        </Link>
+                         <Link href="#" className="text-muted-foreground hover:text-primary">
+                            <Instagram className="h-6 w-6" />
+                            <span className="sr-only">Instagram</span>
+                        </Link>
+                         <Link href="#" className="text-muted-foreground hover:text-primary">
+                            <Facebook className="h-6 w-6" />
+                            <span className="sr-only">Facebook</span>
+                        </Link>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
       </main>
 
       {/* Footer */}
