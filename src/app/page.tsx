@@ -93,23 +93,12 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-1">
         {/* 1. Value Proposition & Main Offer (Hero) */}
-        <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center text-center text-white px-4">
-            <div className="absolute inset-0">
-                <Image
-                    src="https://placehold.co/1920x1080/000000/FFFFFF.png"
-                    alt="Athlete mid-workout"
-                    fill={true}
-                    style={{objectFit:"cover"}}
-                    className="opacity-40"
-                    data-ai-hint="athlete workout intense"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-            </div>
+        <section className="relative bg-background py-20 md:py-32 flex items-center justify-center text-center px-4">
             <div className="relative z-10">
-                 <h1 className="text-4xl font-bold tracking-tight md:text-6xl text-shadow-lg">
+                 <h1 className="text-4xl font-bold tracking-tight md:text-6xl text-foreground">
                     Stop Guessing. Start Transforming.
                   </h1>
-                  <p className="mt-4 max-w-2xl text-lg text-foreground/80">
+                  <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
                     Unlock your potential with AI-driven workout plans, personalized nutrition guides, and premium supplements. Your all-in-one fitness solution awaits.
                   </p>
                   <div className="mt-8">
@@ -311,6 +300,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
-    
