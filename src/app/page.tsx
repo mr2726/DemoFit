@@ -98,12 +98,12 @@ export default function LandingPage() {
                  <h1 className="text-4xl font-bold tracking-tight md:text-6xl text-foreground">
                     Stop Guessing. Start Transforming.
                   </h1>
-                  <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+                  <p className="mt-4 max-w-2xl text-lg text-muted-foreground" style={{margin: "0 auto"}}>
                     Unlock your potential with AI-driven workout plans, personalized nutrition guides, and premium supplements. Your all-in-one fitness solution awaits.
                   </p>
                   <div className="mt-8">
                     <Button size="lg" asChild>
-                      <Link href="/login">Start Your Free Trial</Link>
+                      <Link href="/login">Get Started Today</Link>
                     </Button>
                   </div>
             </div>
@@ -250,10 +250,10 @@ export default function LandingPage() {
          <section className="py-20 bg-primary text-primary-foreground">
             <div className="container mx-auto max-w-3xl px-4 text-center">
                  <h2 className="text-center text-3xl font-bold">Ready to Build Your Best Body?</h2>
-                 <p className="mt-2 text-center text-primary-foreground/80 mx-auto max-w-xl">Join thousands of others who have transformed their lives with Fitness Hub. Your first week is on us.</p>
+                 <p className="mt-2 text-center text-primary-foreground/80 mx-auto max-w-xl">Join thousands of others who have transformed their lives with Fitness Hub. Your journey starts now.</p>
                  <div className="mt-8">
                     <Button size="lg" variant="secondary" asChild>
-                      <Link href="/login">Claim Your Free Week</Link>
+                      <Link href="/login">Join Fitness Hub Now</Link>
                     </Button>
                  </div>
             </div>
