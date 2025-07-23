@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
                                         contentStyle={{
                                             backgroundColor: 'hsl(var(--background))',
                                             borderColor: 'hsl(var(--border))',
-                                            color: '#fff'
+                                            color: 'hsl(var(--foreground))'
                                         }}
                                     />
                                 </PieChart>
