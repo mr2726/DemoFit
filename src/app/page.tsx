@@ -159,7 +159,7 @@ export default function LandingPage() {
         </section>
         
         {/* Testimonials Section */}
-        <section className="bg-muted py-20 overflow-hidden">
+        <section className="py-20 overflow-hidden">
           <div className="container mx-auto px-4">
             <h2 className="text-center text-3xl font-bold">Loved by Our Community</h2>
             <Carousel
@@ -199,7 +199,7 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20">
+        <section className="bg-muted py-20">
             <div className="container mx-auto max-w-3xl px-4">
                  <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
                  <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
