@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, PlusCircle, NotebookPen } from "lucide-react";
+import { Loader2, NotebookPen, Eye } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { format } from 'date-fns';
+import Link from "next/link";
 
 interface NutritionPlan {
     id: string;
@@ -47,6 +48,9 @@ export default function NutritionTrackingPage() {
             const data = docSnap.data();
             setWeight(data.weight?.toString() || '');
             setCalories(data.calories?.toString() || '');
+        } else {
+            setWeight('');
+            setCalories('');
         }
     }, [user, today]);
 
@@ -59,7 +63,6 @@ export default function NutritionTrackingPage() {
             
             setLoading(true);
             try {
-                // Fetch purchased product IDs
                 const userWorkoutsRef = collection(db, "user_workouts");
                 const q = query(userWorkoutsRef, where("userId", "==", user.uid));
                 const querySnapshot = await getDocs(q);
@@ -77,7 +80,6 @@ export default function NutritionTrackingPage() {
                 const resolvedPlans = (await Promise.all(planPromises)).filter(Boolean) as NutritionPlan[];
                 setNutritionPlans(resolvedPlans);
                 
-                // Fetch today's tracking data
                 await fetchTrackingData();
 
             } catch (error) {
@@ -95,12 +97,24 @@ export default function NutritionTrackingPage() {
         fetchNutritionPlans();
 
     }, [user, toast, fetchTrackingData]);
+    
+    // Listen for changes in other tabs/windows
+    useEffect(() => {
+        const handleFocus = () => {
+            fetchTrackingData();
+        };
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [fetchTrackingData]);
 
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);
         try {
             const trackingDocRef = doc(db, 'user_tracking', `${user.uid}_${today}`);
+            
             const data: TrackingData = {
                 userId: user.uid,
                 date: today
@@ -118,9 +132,6 @@ export default function NutritionTrackingPage() {
         }
     }
 
-    const handleAutofillCalories = (kcal: number) => {
-        setCalories(kcal.toString());
-    }
 
     if (loading) {
         return (
@@ -140,7 +151,7 @@ export default function NutritionTrackingPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Today's Log - {format(new Date(), 'MMMM d, yyyy')}</CardTitle>
-                    <CardDescription>Enter your current weight and total calories consumed today.</CardDescription>
+                    <CardDescription>Enter your current weight and total calories consumed today. You can also log individual meals from your plans below.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
@@ -149,7 +160,7 @@ export default function NutritionTrackingPage() {
                             <Input id="weight" type="number" placeholder="e.g., 75.5" value={weight} onChange={e => setWeight(e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                             <Label htmlFor="calories">Calories (kcal)</Label>
+                             <Label htmlFor="calories">Total Calories (kcal)</Label>
                             <Input id="calories" type="number" placeholder="e.g., 2200" value={calories} onChange={e => setCalories(e.target.value)} />
                         </div>
                     </div>
@@ -176,12 +187,14 @@ export default function NutritionTrackingPage() {
                                 />
                                 <CardHeader>
                                     <CardTitle>{plan.name}</CardTitle>
-                                    <CardDescription>{plan.totalKcal} kcal</CardDescription>
+                                    <CardDescription>{plan.description}</CardDescription>
                                 </CardHeader>
                                 <CardFooter className="mt-auto">
-                                    <Button className="w-full" onClick={() => handleAutofillCalories(plan.totalKcal || 0)}>
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Add Today's Intake
+                                    <Button asChild className="w-full">
+                                        <Link href={`/dashboard/nutrition/${plan.id}`}>
+                                             <Eye className="mr-2 h-4 w-4" />
+                                            View Plan
+                                        </Link>
                                     </Button>
                                 </CardFooter>
                             </Card>
