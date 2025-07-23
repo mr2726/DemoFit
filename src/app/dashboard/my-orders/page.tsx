@@ -49,7 +49,7 @@ export default function MyOrdersPage() {
             setLoading(true);
             try {
                 const ordersRef = collection(db, 'orders');
-                const q = query(ordersRef, where('userId', '==', user.uid), orderBy('purchaseDate', 'desc'));
+                const q = query(ordersRef, where('userId', '==', user.uid));
                 const querySnapshot = await getDocs(q);
 
                 const fetchedOrders = querySnapshot.docs.map(doc => {
@@ -58,6 +58,10 @@ export default function MyOrdersPage() {
                     data.price = parseFloat(data.price || 0);
                     return { id: doc.id, ...data } as Order
                 });
+                
+                // Sort orders by date client-side
+                fetchedOrders.sort((a, b) => b.purchaseDate.seconds - a.purchaseDate.seconds);
+
                 setOrders(fetchedOrders);
             } catch (error) {
                 console.error("Error fetching orders:", error);
