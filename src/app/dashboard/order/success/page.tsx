@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getPaymentIntent } from '@/actions/stripe';
-import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,7 +34,6 @@ function SuccessContent() {
                 if (intent) {
                     setStatus(intent.status);
                     
-                    // If status is 'succeeded' and we have not processed this before.
                     if (intent.status === 'succeeded' && redirectStatus === 'succeeded') {
                         const { userId, productId, productName, productDescription, productPrice, imageUrl, category } = intent.metadata;
                         
@@ -42,8 +41,40 @@ function SuccessContent() {
                             throw new Error("Missing user or product ID in payment metadata.");
                         }
 
+                        // --- Idempotency Check ---
+                        // Check if an order or workout has already been created recently for this user and product
+                        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                        
+                        const orderQuery = query(
+                            collection(db, 'orders'),
+                            where('userId', '==', userId),
+                            where('productId', '==', productId),
+                            where('purchaseDate', '>', fiveMinutesAgo),
+                            limit(1)
+                        );
+
+                        const userWorkoutQuery = query(
+                            collection(db, 'user_workouts'),
+                            where('userId', '==', userId),
+                            where('productId', '==', productId),
+                            where('purchaseDate', '>', fiveMinutesAgo),
+                            limit(1)
+                        );
+
+                        const [existingOrderSnap, existingWorkoutSnap] = await Promise.all([
+                            getDocs(orderQuery),
+                            getDocs(userWorkoutQuery)
+                        ]);
+
+                        if (!existingOrderSnap.empty || !existingWorkoutSnap.empty) {
+                            console.log("Purchase already recorded. Skipping duplicate entry.");
+                            setLoading(false);
+                            return; // Stop execution if already processed
+                        }
+                        // --- End Idempotency Check ---
+
+
                         if(category === "Supplements") {
-                             // Create a new order document in the 'orders' collection.
                             await addDoc(collection(db, 'orders'), {
                                 userId,
                                 productId,
@@ -52,11 +83,10 @@ function SuccessContent() {
                                 price: parseFloat(productPrice),
                                 imageUrl: imageUrl || null,
                                 shipping: intent.shipping,
-                                status: 'Processing', // Initial status
+                                status: 'Processing',
                                 purchaseDate: serverTimestamp(),
                             });
                         } else {
-                            // This is for Workout Plan or Nutrition
                             const userWorkoutId = `${userId}_${productId}`;
                             const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
 
