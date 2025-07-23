@@ -1,9 +1,11 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { Roboto_Condensed } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
+import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 
 const roboto_condensed = Roboto_Condensed({
   subsets: ['latin'],
@@ -38,6 +40,7 @@ export default function RootLayout({
           {children}
         </AuthProvider>
         <Toaster />
+        <PwaInstallPrompt />
       </body>
     </html>
   );
