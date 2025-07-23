@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { getPaymentIntent } from '@/actions/stripe';
-import { doc, setDoc, serverTimestamp, collection, addDoc, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
