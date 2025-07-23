@@ -108,9 +108,9 @@ export default function DashboardPage() {
 
         if (trackingDocs.length > 0) {
             // Current Weight
-            const latestWeight = trackingDocs[0].weight;
-            if (latestWeight) {
-                setCurrentWeight(`${latestWeight} kg`);
+            const latestWeightDoc = trackingDocs.find(doc => doc.weight);
+            if (latestWeightDoc) {
+                setCurrentWeight(`${latestWeightDoc.weight} kg`);
             }
 
             // Weight History (last 6 months)

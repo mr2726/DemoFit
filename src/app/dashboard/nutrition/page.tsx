@@ -22,10 +22,10 @@ interface NutritionPlan {
 }
 
 interface TrackingData {
-    weight?: number;
-    calories?: number;
     userId: string;
     date: string;
+    weight?: number;
+    calories?: number;
 }
 
 export default function NutritionTrackingPage() {
