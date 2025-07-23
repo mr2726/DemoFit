@@ -80,15 +80,7 @@ export default function CheckoutPage() {
     }, [clientSecret]);
 
     const appearance = {
-        theme: 'night',
-        variables: {
-            colorPrimary: '#ffffff',
-            colorBackground: '#0A0A0A',
-            colorText: '#ffffff',
-            colorDanger: '#df1b41',
-            fontFamily: 'PT Sans, sans-serif',
-            borderRadius: '0.3rem',
-        },
+        theme: 'stripe',
     } as const;
       
     const options: StripeElementsOptions = {
