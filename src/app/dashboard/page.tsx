@@ -98,12 +98,11 @@ export default function DashboardPage() {
             trackingRef,
             where("userId", "==", user.uid),
             where("date", ">=", format(sixMonthsAgo, 'yyyy-MM-dd')),
-            orderBy("date")
+            orderBy("date", "desc")
         );
         
         const querySnapshot = await getDocs(q);
-        // Sort documents by date in descending order in the client
-        const trackingDocs = querySnapshot.docs.map(d => ({...d.data(), id: d.id})).sort((a, b) => b.date.localeCompare(a.date));
+        const trackingDocs = querySnapshot.docs.map(d => ({...d.data(), id: d.id}));
 
 
         if (trackingDocs.length > 0) {
@@ -125,11 +124,16 @@ export default function DashboardPage() {
                     monthlyAverages[monthKey].count++;
                 }
             });
+            
+            const sortedMonths = Object.keys(monthlyAverages).sort();
 
-            const weightChartData = Object.entries(monthlyAverages).map(([month, data]) => ({
-                date: format(new Date(month), 'MMM'),
-                weight: Math.round(data.total / data.count)
-            })).reverse();
+            const weightChartData = sortedMonths.map(month => {
+                const data = monthlyAverages[month];
+                return {
+                    date: format(new Date(month), 'MMM'),
+                    weight: Math.round(data.total / data.count)
+                }
+            });
             setWeightHistory(weightChartData);
             
             // Calorie History (last 7 days)
