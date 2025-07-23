@@ -92,9 +92,9 @@ export default function AdminOrdersPage() {
             case 'Processing':
                 return 'secondary';
             case 'Shipped':
-                return 'default';
+                return 'warning';
             case 'Delivered':
-                return 'outline';
+                return 'success';
             case 'Canceled':
                 return 'destructive';
             default:
