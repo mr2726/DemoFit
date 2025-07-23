@@ -26,7 +26,7 @@ interface Order {
             line1: string;
             line2: string | null;
             city: string;
-            state: string;
+            state: string | null;
             postal_code: string;
             country: string;
         }
@@ -52,7 +52,12 @@ export default function MyOrdersPage() {
                 const q = query(ordersRef, where('userId', '==', user.uid), orderBy('purchaseDate', 'desc'));
                 const querySnapshot = await getDocs(q);
 
-                const fetchedOrders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+                const fetchedOrders = querySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    // Ensure price is a number with decimals
+                    data.price = parseFloat(data.price || 0);
+                    return { id: doc.id, ...data } as Order
+                });
                 setOrders(fetchedOrders);
             } catch (error) {
                 console.error("Error fetching orders:", error);
@@ -130,7 +135,9 @@ export default function MyOrdersPage() {
                                             <div className="text-sm">
                                                 <div>{order.shipping?.name}</div>
                                                 <div className="text-muted-foreground">
-                                                    {order.shipping?.address.line1}, {order.shipping?.address.city}, {order.shipping?.address.state} {order.shipping?.address.postal_code}
+                                                    {order.shipping?.address.line1}, {order.shipping?.address.city}
+                                                    {order.shipping?.address.state && `, ${order.shipping.address.state}`}
+                                                    {' '}{order.shipping?.address.postal_code}
                                                 </div>
                                             </div>
                                         </TableCell>
