@@ -28,78 +28,63 @@ function SuccessContent() {
                 return;
             }
 
+            // Trust the redirect status first for UI, then verify with API for DB write
+            setStatus(redirectStatus);
+
             try {
-                const intent = await getPaymentIntent(paymentIntentId);
+                if (redirectStatus === 'succeeded') {
+                    const intent = await getPaymentIntent(paymentIntentId);
 
-                if (intent) {
-                    setStatus(intent.status);
-                    
-                    if (intent.status === 'succeeded' && redirectStatus === 'succeeded') {
-                        const { userId, productId, productName, productDescription, productPrice, imageUrl, category } = intent.metadata;
-                        
-                        if (!userId || !productId) {
-                            throw new Error("Missing user or product ID in payment metadata.");
-                        }
-
-                        // --- Idempotency Check ---
-                        // Check if an order or workout has already been created recently for this user and product
-                        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                        
-                        const orderQuery = query(
-                            collection(db, 'orders'),
-                            where('userId', '==', userId),
-                            where('productId', '==', productId),
-                            where('purchaseDate', '>', fiveMinutesAgo),
-                            limit(1)
-                        );
-
-                        const userWorkoutQuery = query(
-                            collection(db, 'user_workouts'),
-                            where('userId', '==', userId),
-                            where('productId', '==', productId),
-                            where('purchaseDate', '>', fiveMinutesAgo),
-                            limit(1)
-                        );
-
-                        const [existingOrderSnap, existingWorkoutSnap] = await Promise.all([
-                            getDocs(orderQuery),
-                            getDocs(userWorkoutQuery)
-                        ]);
-
-                        if (!existingOrderSnap.empty || !existingWorkoutSnap.empty) {
-                            console.log("Purchase already recorded. Skipping duplicate entry.");
-                            setLoading(false);
-                            return; // Stop execution if already processed
-                        }
-                        // --- End Idempotency Check ---
-
-
-                        if(category === "Supplements") {
-                            await addDoc(collection(db, 'orders'), {
-                                userId,
-                                productId,
-                                productName,
-                                productDescription,
-                                price: parseFloat(productPrice),
-                                imageUrl: imageUrl || null,
-                                shipping: intent.shipping,
-                                status: 'Processing',
-                                purchaseDate: serverTimestamp(),
-                            });
-                        } else {
-                            const userWorkoutId = `${userId}_${productId}`;
-                            const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
-
-                            await setDoc(userWorkoutRef, {
-                                userId: userId,
-                                productId: productId,
-                                purchaseDate: serverTimestamp(),
-                                status: 'active'
-                            }, { merge: true });
-                        }
+                    if (!intent || !intent.metadata?.userId || !intent.metadata?.productId) {
+                         throw new Error("Payment verification failed or metadata missing.");
                     }
-                } else {
-                    setStatus('error');
+                    
+                    const { userId, productId, productName, productDescription, productPrice, imageUrl, category } = intent.metadata;
+                        
+                    // --- Idempotency Check ---
+                    // Check if an order or workout has already been created for this payment intent
+                    const idempotencyKey = `pi_${paymentIntentId}`;
+                    const orderQuery = query(collection(db, 'orders'), where('paymentIntentId', '==', idempotencyKey), limit(1));
+                    const userWorkoutQuery = query(collection(db, 'user_workouts'), where('paymentIntentId', '==', idempotencyKey), limit(1));
+                    
+                    const [existingOrderSnap, existingWorkoutSnap] = await Promise.all([
+                        getDocs(orderQuery),
+                        getDocs(userWorkoutQuery)
+                    ]);
+
+                    if (!existingOrderSnap.empty || !existingWorkoutSnap.empty) {
+                        console.log("Purchase already recorded for this payment. Skipping duplicate entry.");
+                        setLoading(false);
+                        return; // Stop execution if already processed
+                    }
+                    // --- End Idempotency Check ---
+
+
+                    if(category === "Supplements") {
+                        await addDoc(collection(db, 'orders'), {
+                            userId,
+                            productId,
+                            productName,
+                            productDescription,
+                            price: parseFloat(productPrice),
+                            imageUrl: imageUrl || null,
+                            shipping: intent.shipping,
+                            status: 'Processing',
+                            purchaseDate: serverTimestamp(),
+                            paymentIntentId: idempotencyKey,
+                        });
+                    } else {
+                        const userWorkoutId = `${userId}_${productId}`;
+                        const userWorkoutRef = doc(db, 'user_workouts', userWorkoutId);
+
+                        await setDoc(userWorkoutRef, {
+                            userId: userId,
+                            productId: productId,
+                            purchaseDate: serverTimestamp(),
+                            status: 'active',
+                            paymentIntentId: idempotencyKey,
+                        }, { merge: true });
+                    }
                 }
             } catch (error) {
                 console.error("Error during payment verification or db write:", error);
@@ -160,7 +145,7 @@ function SuccessContent() {
     return (
         <>
             <AlertCircle className="h-12 w-12 text-red-500" />
-            <CardTitle>Payment Failed</CardTitle>
+            <CardTitle>Payment Failed or Canceled</CardTitle>
             <CardDescription>
                 We couldn't process your payment. Please try again or contact support if the problem persists.
             </CardDescription>
