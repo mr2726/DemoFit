@@ -158,25 +158,6 @@ export default function LandingPage() {
           </div>
         </section>
         
-        {/* FAQ Section */}
-        <section className="py-20">
-            <div className="container mx-auto max-w-3xl px-4">
-                 <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
-                 <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
-                 <Accordion type="single" collapsible className="w-full mt-12">
-                    {faqItems.map((item, index) => (
-                        <AccordionItem key={index} value={`item-${index + 1}`}>
-                            <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
-                            <AccordionContent className="text-muted-foreground">
-                                {item.answer}
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                 </Accordion>
-            </div>
-        </section>
-
-
         {/* Testimonials Section */}
         <section className="bg-muted py-20 overflow-hidden">
           <div className="container mx-auto px-4">
@@ -215,6 +196,24 @@ export default function LandingPage() {
                 </CarouselContent>
             </Carousel>
           </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20">
+            <div className="container mx-auto max-w-3xl px-4">
+                 <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
+                 <p className="mt-2 text-center text-muted-foreground">Find answers to common questions about Fitness Hub.</p>
+                 <Accordion type="single" collapsible className="w-full mt-12">
+                    {faqItems.map((item, index) => (
+                        <AccordionItem key={index} value={`item-${index + 1}`}>
+                            <AccordionTrigger className="text-lg">{item.question}</AccordionTrigger>
+                            <AccordionContent className="text-muted-foreground">
+                                {item.answer}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                 </Accordion>
+            </div>
         </section>
       </main>
 
