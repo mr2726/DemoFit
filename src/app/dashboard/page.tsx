@@ -2,13 +2,13 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Activity, Flame, HeartPulse, Weight } from 'lucide-react';
+import { Activity, Flame, Weight } from 'lucide-react';
 import { ActivityCalendar } from '@/components/activity-calendar';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { format, subDays, startOfMonth, endOfMonth, eachMonthOfInterval, getMonth, isAfter, isWithinInterval } from 'date-fns';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { format, subDays, isAfter } from 'date-fns';
 
 type ActivityData = {
   date: string;
@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [weightHistory, setWeightHistory] = useState<any[]>([]);
   const [calorieHistory, setCalorieHistory] = useState<any[]>([]);
   const [workoutsThisWeek, setWorkoutsThisWeek] = useState(0);
+  const [caloriesBurned, setCaloriesBurned] = useState<string>('0');
 
   useEffect(() => {
     if (!user) return;
@@ -105,6 +106,12 @@ export default function DashboardPage() {
                 setCurrentWeight(`${latestWeightDoc.weight} kg`);
             }
 
+            // Calories Burned (most recent day)
+            const latestCalorieDoc = trackingDocs.find(doc => doc.calories);
+            if (latestCalorieDoc) {
+                setCaloriesBurned(latestCalorieDoc.calories.toString());
+            }
+
             // Weight History (last 6 months)
             const monthlyAverages: { [key: string]: { total: number, count: number } } = {};
             trackingDocs.forEach(doc => {
@@ -151,11 +158,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard title="Current Weight" value={currentWeight} icon={Weight} />
         <StatCard title="Workouts This Week" value={workoutsThisWeek.toString()} icon={Activity} />
-        <StatCard title="Calories Burned" value="1,280" icon={Flame} description='Estimated' />
-        <StatCard title="Avg. Heart Rate" value="120 bpm" icon={HeartPulse} description='From last workout' />
+        <StatCard title="Calories Burned" value={caloriesBurned} icon={Flame} description='Last entry' />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
