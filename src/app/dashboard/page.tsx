@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { format, subDays, isAfter } from 'date-fns';
+import { format, subDays, isAfter, parseISO } from 'date-fns';
 
 type ActivityData = {
   date: string;
@@ -76,7 +76,6 @@ export default function DashboardPage() {
             level: Math.min(4, count) as (0 | 1 | 2 | 3 | 4)
         }));
         
-        // This part is just to fill the calendar for display
         const fullData: ActivityData[] = [];
         for (let i = 0; i <= 365; i++) {
             const date = subDays(today, 365 - i);
@@ -91,63 +90,64 @@ export default function DashboardPage() {
     // Fetch tracking data (weight & calories)
     const fetchTrackingData = async () => {
         const today = new Date();
-        const sixMonthsAgo = subDays(today, 180);
+        const todayStr = format(today, 'yyyy-MM-dd');
         
         const trackingRef = collection(db, 'user_tracking');
         const q = query(trackingRef, where("userId", "==", user.uid));
         
         const querySnapshot = await getDocs(q);
-        const trackingDocs = querySnapshot.docs.map(d => d.data()).sort((a, b) => b.date.localeCompare(a.date));
+        const trackingDocs = querySnapshot.docs.map(d => d.data());
 
-        if (trackingDocs.length > 0) {
-            // Current Weight
-            const latestWeightDoc = trackingDocs.find(doc => doc.weight);
-            if (latestWeightDoc) {
-                setCurrentWeight(`${latestWeightDoc.weight} kg`);
-            }
+        // Sort docs by date descending
+        const sortedDocs = trackingDocs.sort((a, b) => b.date.localeCompare(a.date));
 
-            // Calories Burned (most recent day)
-            const latestCalorieDoc = trackingDocs.find(doc => doc.calories);
-            if (latestCalorieDoc) {
-                setCaloriesBurned(latestCalorieDoc.calories.toString());
-            }
-
-            // Weight History (last 6 months)
-            const monthlyAverages: { [key: string]: { total: number, count: number } } = {};
-            trackingDocs.forEach(doc => {
-                const docDate = new Date(doc.date);
-                if (doc.weight && isAfter(docDate, sixMonthsAgo)) {
-                    const monthKey = format(docDate, 'yyyy-MM');
-                    if (!monthlyAverages[monthKey]) {
-                        monthlyAverages[monthKey] = { total: 0, count: 0 };
-                    }
-                    monthlyAverages[monthKey].total += doc.weight;
-                    monthlyAverages[monthKey].count++;
-                }
-            });
-            
-            const sortedMonths = Object.keys(monthlyAverages).sort();
-
-            const weightChartData = sortedMonths.map(month => {
-                const data = monthlyAverages[month];
-                return {
-                    date: format(new Date(`${month}-02`), 'MMM'), // Use day 2 to avoid timezone issues
-                    weight: Math.round(data.total / data.count)
-                }
-            });
-            setWeightHistory(weightChartData);
-            
-            // Calorie History (last 7 days)
-            const last7Days = Array.from({length: 7}, (_, i) => format(subDays(today, i), 'yyyy-MM-dd')).reverse();
-            const calorieChartData = last7Days.map(dateStr => {
-                 const doc = trackingDocs.find(d => d.date === dateStr);
-                 return {
-                    day: format(new Date(dateStr), 'E'),
-                    calories: doc?.calories || 0
-                 }
-            });
-            setCalorieHistory(calorieChartData);
+        // Get Today's Calories
+        const todayDoc = sortedDocs.find(doc => doc.date === todayStr);
+        setCaloriesBurned(todayDoc?.calories?.toString() || '0');
+        
+        // Get Current Weight (most recent entry)
+        const latestWeightDoc = sortedDocs.find(doc => doc.weight);
+        if (latestWeightDoc) {
+            setCurrentWeight(`${latestWeightDoc.weight} kg`);
         }
+
+        // Get Calorie History (last 7 days)
+        const last7Days = Array.from({length: 7}, (_, i) => format(subDays(today, i), 'yyyy-MM-dd')).reverse();
+        const calorieChartData = last7Days.map(dateStr => {
+             const doc = sortedDocs.find(d => d.date === dateStr);
+             return {
+                day: format(parseISO(dateStr), 'E'),
+                calories: doc?.calories || 0
+             }
+        });
+        setCalorieHistory(calorieChartData);
+
+        // Get Weight History (last 6 months)
+        const sixMonthsAgo = subDays(today, 180);
+        const monthlyAverages: { [key: string]: { total: number, count: number } } = {};
+        
+        sortedDocs.forEach(doc => {
+            const docDate = parseISO(doc.date);
+            if (doc.weight && isAfter(docDate, sixMonthsAgo)) {
+                const monthKey = format(docDate, 'yyyy-MM');
+                if (!monthlyAverages[monthKey]) {
+                    monthlyAverages[monthKey] = { total: 0, count: 0 };
+                }
+                monthlyAverages[monthKey].total += doc.weight;
+                monthlyAverages[monthKey].count++;
+            }
+        });
+        
+        const sortedMonths = Object.keys(monthlyAverages).sort();
+
+        const weightChartData = sortedMonths.map(month => {
+            const data = monthlyAverages[month];
+            return {
+                date: format(parseISO(`${month}-02`), 'MMM'), // Use day 2 to avoid timezone issues
+                weight: Math.round(data.total / data.count)
+            }
+        });
+        setWeightHistory(weightChartData);
     };
     
     fetchActivity();
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard title="Current Weight" value={currentWeight} icon={Weight} />
         <StatCard title="Workouts This Week" value={workoutsThisWeek.toString()} icon={Activity} />
-        <StatCard title="Calories Burned" value={caloriesBurned} icon={Flame} description='Last entry' />
+        <StatCard title="Calories Burned" value={caloriesBurned} icon={Flame} description='Today' />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
