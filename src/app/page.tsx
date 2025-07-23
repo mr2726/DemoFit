@@ -96,10 +96,10 @@ export default function LandingPage() {
         <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center text-center text-white px-4">
             <div className="absolute inset-0">
                 <Image
-                    src="https://placehold.co/1920x1080"
+                    src="https://placehold.co/1920x1080/000000/FFFFFF.png"
                     alt="Athlete mid-workout"
                     fill={true}
-                    objectFit="cover"
+                    style={{objectFit:"cover"}}
                     className="opacity-40"
                     data-ai-hint="athlete workout intense"
                 />
