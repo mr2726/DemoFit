@@ -222,7 +222,8 @@ export default function AnalyticsPage() {
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: 'hsl(var(--background))',
-                                            borderColor: 'hsl(var(--border))'
+                                            borderColor: 'hsl(var(--border))',
+                                            color: 'hsl(var(--foreground))'
                                         }}
                                     />
                                 </PieChart>
