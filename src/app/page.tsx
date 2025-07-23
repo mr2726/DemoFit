@@ -2,8 +2,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BarChart3, PlayCircle, Target } from 'lucide-react';
+import { BarChart3, PlayCircle, Target, Star } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+
 
 const LandingHeader = () => (
   <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,6 +25,44 @@ const LandingHeader = () => (
     </div>
   </header>
 );
+
+const testimonials = [
+    {
+        name: "Jane Smith",
+        quote: "Fitness Hub changed my life. The plans are easy to follow and the results are real. I've never felt better!"
+    },
+    {
+        name: "Mike Davis",
+        quote: "The workout player is a game-changer. It keeps me focused and pushing my limits. Highly recommend!"
+    },
+    {
+        name: "Chloe Wilson",
+        quote: "Finally, a fitness app that has it all. Great workouts, delicious recipes, and quality supplements in one place."
+    },
+    {
+        name: "Alex Johnson",
+        quote: "The progress tracking is incredibly motivating. Seeing my stats improve week by week keeps me coming back."
+    },
+    {
+        name: "Samantha Bee",
+        quote: "I love the nutrition section! The recipes are delicious and have helped me understand my macros so much better."
+    },
+    {
+        name: "Tom Richards",
+        quote: "As someone who is always busy, the efficiency of the workouts is a huge plus. Maximum results in minimum time."
+    }
+];
+
+const FiveStars = () => (
+    <div className="flex items-center gap-1 text-primary">
+        <Star className="w-5 h-5 fill-current" />
+        <Star className="w-5 h-5 fill-current" />
+        <Star className="w-5 h-5 fill-current" />
+        <Star className="w-5 h-5 fill-current" />
+        <Star className="w-5 h-5 fill-current" />
+    </div>
+);
+
 
 export default function LandingPage() {
   return (
@@ -116,59 +156,42 @@ export default function LandingPage() {
 
 
         {/* Testimonials Section */}
-        <section className="bg-muted py-20">
+        <section className="bg-muted py-20 overflow-hidden">
           <div className="container mx-auto px-4">
             <h2 className="text-center text-3xl font-bold">Loved by Our Community</h2>
-            <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40" />
-                      <AvatarFallback>JS</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">Jane Smith</p>
-                      <p className="text-sm text-muted-foreground">
-                        "Fitness Hub changed my life. The plans are easy to follow and the results are real. I've never felt better!"
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40" />
-                      <AvatarFallback>MD</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">Mike Davis</p>
-                      <p className="text-sm text-muted-foreground">
-                        "The workout player is a game-changer. It keeps me focused and pushing my limits. Highly recommend!"
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                   <div className="flex items-start gap-4">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40" />
-                      <AvatarFallback>CW</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">Chloe Wilson</p>
-                      <p className="text-sm text-muted-foreground">
-                        "Finally, a fitness app that has it all. Great workouts, delicious recipes, and quality supplements in one place."
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Carousel
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[
+                    Autoplay({
+                        delay: 2000,
+                        stopOnInteraction: false,
+                    }),
+                ]}
+                className="w-full mt-12"
+            >
+                <CarouselContent>
+                    {testimonials.map((testimonial, index) => (
+                        <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                             <div className="p-1">
+                                <Card>
+                                    <CardContent className="pt-6">
+                                        <div className="space-y-4">
+                                            <FiveStars />
+                                            <p className="text-muted-foreground italic">
+                                                "{testimonial.quote}"
+                                            </p>
+                                            <p className="font-semibold text-right">- {testimonial.name}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
           </div>
         </section>
       </main>
