@@ -80,7 +80,7 @@ export default function CheckoutPage() {
     }, [clientSecret]);
 
     const appearance = {
-        theme: 'stripe',
+        theme: 'night',
     } as const;
       
     const options: StripeElementsOptions = {
