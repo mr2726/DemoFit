@@ -1,57 +1,73 @@
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import TelegramBot from 'node-telegram-bot-api';
+import multer from 'multer';
+import { Readable } from 'stream';
 
-const {
-    R2_ACCOUNT_ID,
-    R2_ACCESS_KEY_ID,
-    R2_SECRET_ACCESS_KEY,
-    R2_BUCKET_NAME,
-    R2_PUBLIC_URL
-} = process.env;
+const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = process.env;
 
-if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_URL) {
-  throw new Error("Cloudflare R2 environment variables are not set.");
+if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    throw new Error("Telegram environment variables (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) are not set.");
 }
 
-const s3Client = new S3Client({
-    region: "auto",
-    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
-    },
-});
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
-const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex');
+// Configure multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const fileName = searchParams.get('fileName');
-        const fileType = searchParams.get('fileType');
-        
-        if (!fileName || !fileType) {
-            return NextResponse.json({ error: "fileName and fileType are required" }, { status: 400 });
-        }
-        
-        const key = `${generateFileName()}-${fileName}`;
-
-        const command = new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: key,
-            ContentType: fileType,
+// Helper to run multer middleware
+const runMiddleware = (req: NextRequest, middleware: any): Promise<any> => {
+    return new Promise((resolve, reject) => {
+        // The 'files' property is what multer uses. We'll trick it into thinking it's an Express request.
+        const expressRequest = req as any;
+        expressRequest.files = expressRequest.files || [];
+        middleware(expressRequest, new NextResponse(), (result: any) => {
+            if (result instanceof Error) {
+                return reject(result);
+            }
+            return resolve(expressRequest); // Resolve with the modified request
         });
-        
-        const url = await getSignedUrl(s3Client, command, { expiresIn: 60 * 5 }); // 5 minutes
+    });
+};
 
-        return NextResponse.json({ url, key });
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
 
-    } catch (error) {
-        console.error("Error generating signed URL:", error);
-        return NextResponse.json({ error: "Failed to generate signed URL" }, { status: 500 });
+export async function POST(request: NextRequest) {
+    try {
+        // We need to get the file buffer from the request
+        const data = await request.formData();
+        const file: File | null = data.get('file') as unknown as File;
+
+        if (!file) {
+            return NextResponse.json({ error: "No file was uploaded." }, { status: 400 });
+        }
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const stream = Readable.from(buffer);
+
+        // Send the video to Telegram
+        const fileData = await bot.sendVideo(TELEGRAM_CHAT_ID, stream, {}, {
+            filename: file.name,
+            contentType: file.type,
+        });
+
+        if (!fileData.video?.file_id) {
+            throw new Error('Failed to get file_id from Telegram.');
+        }
+
+        // Get the file path from Telegram
+        const fileLink = await bot.getFile(fileData.video.file_id);
+        const videoUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileLink.file_path}`;
+
+        return NextResponse.json({ url: videoUrl, key: fileData.video.file_id });
+
+    } catch (error: any) {
+        console.error("Error handling file upload to Telegram:", error);
+        return NextResponse.json({ error: `Failed to upload to Telegram: ${error.message}` }, { status: 500 });
     }
 }
-

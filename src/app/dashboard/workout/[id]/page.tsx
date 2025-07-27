@@ -94,24 +94,24 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
         );
     }
     
-    // Check if it's another video URL (like R2)
-    if (source.startsWith('http') && (source.endsWith('.mp4') || source.endsWith('.mov') || source.endsWith('.webm'))) {
-        return (
-             <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center group">
-                 <ReactPlayer
-                    url={source}
-                    width="100%"
-                    height="100%"
-                    controls={true}
-                    playing={true}
-                    className="absolute top-0 left-0"
-                />
-            </div>
-        )
-    }
-
-    // Check if it's an image URL
+    // Check if it's another video URL (like Telegram or R2)
     if (source.startsWith('http')) {
+         const isVideo = source.includes('mp4') || source.includes('video'); // A simple check
+        if (isVideo) {
+            return (
+                 <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center group">
+                     <ReactPlayer
+                        url={source}
+                        width="100%"
+                        height="100%"
+                        controls={true}
+                        playing={true}
+                        className="absolute top-0 left-0"
+                    />
+                </div>
+            )
+        }
+        // It's an image URL
         return (
             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
                 <img 

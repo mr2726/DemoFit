@@ -122,8 +122,8 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
         if (!file) return;
 
         // Basic validation
-        if (file.size > 100 * 1024 * 1024) { // 100 MB limit
-            toast({ title: "Error", description: "File size must be less than 100MB.", variant: "destructive" });
+        if (file.size > 50 * 1024 * 1024) { // 50 MB limit for Telegram Bot API
+            toast({ title: "Error", description: "File size must be less than 50MB for Telegram uploads.", variant: "destructive" });
             return;
         }
         if (!file.type.startsWith('video/')) {
@@ -132,46 +132,32 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
         }
 
         setUploading(true);
-        setProgress(0);
+        setProgress(0); // Show indeterminate progress
 
         try {
-            // 1. Get presigned URL from our API
-            const presignedUrlRes = await fetch(`/api/upload?fileName=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(file.type)}`);
-            if (!presignedUrlRes.ok) throw new Error('Failed to get presigned URL.');
-            const { url, key } = await presignedUrlRes.json();
-
-            // 2. Upload file to R2 using the presigned URL
-            const xhr = new XMLHttpRequest();
-            xhr.open('PUT', url, true);
-            xhr.setRequestHeader('Content-Type', file.type);
-
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const percentComplete = (event.loaded / event.total) * 100;
-                    setProgress(percentComplete);
-                }
-            };
-
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    const videoUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
-                    form.setValue(`exercises.${index}.videoOrDescription`, videoUrl);
-                    toast({ title: "Success", description: "Video uploaded successfully." });
-                } else {
-                    throw new Error(`Upload failed with status: ${xhr.status}`);
-                }
-                setUploading(false);
-            };
+            const formData = new FormData();
+            formData.append('file', file);
             
-            xhr.onerror = () => {
-                 throw new Error('An error occurred during the upload.');
-            };
+            // Using fetch to simulate progress is complex. We'll show a loading spinner.
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
+            }
+            
+            const { url } = await response.json();
+            form.setValue(`exercises.${index}.videoOrDescription`, url);
+            toast({ title: "Success", description: "Video uploaded successfully." });
 
-            xhr.send(file);
         } catch (error: any) {
-            setUploading(false);
             console.error(error);
             toast({ title: "Upload Error", description: error.message || "Could not upload video.", variant: "destructive" });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -196,9 +182,9 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
                 </Button>
             </div>
             {uploading && (
-                <div className="mt-2 space-y-1">
-                    <Progress value={progress} className="h-2" />
-                    <p className="text-xs text-muted-foreground">Uploading... {Math.round(progress)}%</p>
+                <div className="mt-2 space-y-1 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <p className="text-xs text-muted-foreground">Uploading to Telegram... this may take a moment.</p>
                 </div>
             )}
              <FormMessage />
