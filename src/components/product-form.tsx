@@ -17,10 +17,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { PlusCircle, Trash2 } from "lucide-react"
+import { PlusCircle, Trash2, UploadCloud, Loader2 } from "lucide-react"
 import { Card, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
-import React from "react"
+import React, { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { Progress } from "./ui/progress"
 
 const exerciseSchema = z.object({
     name: z.string().min(1, "Exercise name is required."),
@@ -109,6 +111,101 @@ const defaultValues: Partial<ProductFormValues> = {
   exercises: [],
   recipes: [],
 }
+
+const VideoUploader = ({ field, form, index }: { field: any, form: any, index: number }) => {
+    const { toast } = useToast();
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Basic validation
+        if (file.size > 100 * 1024 * 1024) { // 100 MB limit
+            toast({ title: "Error", description: "File size must be less than 100MB.", variant: "destructive" });
+            return;
+        }
+        if (!file.type.startsWith('video/')) {
+            toast({ title: "Error", description: "Please select a valid video file.", variant: "destructive" });
+            return;
+        }
+
+        setUploading(true);
+        setProgress(0);
+
+        try {
+            // 1. Get presigned URL from our API
+            const presignedUrlRes = await fetch(`/api/upload?fileName=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(file.type)}`);
+            if (!presignedUrlRes.ok) throw new Error('Failed to get presigned URL.');
+            const { url, key } = await presignedUrlRes.json();
+
+            // 2. Upload file to R2 using the presigned URL
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', url, true);
+            xhr.setRequestHeader('Content-Type', file.type);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    setProgress(percentComplete);
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    const videoUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
+                    form.setValue(`exercises.${index}.videoOrDescription`, videoUrl);
+                    toast({ title: "Success", description: "Video uploaded successfully." });
+                } else {
+                    throw new Error(`Upload failed with status: ${xhr.status}`);
+                }
+                setUploading(false);
+            };
+            
+            xhr.onerror = () => {
+                 throw new Error('An error occurred during the upload.');
+            };
+
+            xhr.send(file);
+        } catch (error: any) {
+            setUploading(false);
+            console.error(error);
+            toast({ title: "Upload Error", description: error.message || "Could not upload video.", variant: "destructive" });
+        }
+    };
+
+    return (
+        <FormItem>
+            <FormLabel>Video URL or Upload</FormLabel>
+            <div className="flex items-center gap-2">
+                 <FormControl>
+                    <Input placeholder="https://youtube.com/watch?v=..." {...field} />
+                </FormControl>
+                <Button type="button" variant="outline" asChild className="relative cursor-pointer">
+                    <div>
+                        <UploadCloud className="w-4 h-4"/>
+                        <input
+                            type="file"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            accept="video/*"
+                            onChange={handleFileUpload}
+                            disabled={uploading}
+                        />
+                    </div>
+                </Button>
+            </div>
+            {uploading && (
+                <div className="mt-2 space-y-1">
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground">Uploading... {Math.round(progress)}%</p>
+                </div>
+            )}
+             <FormMessage />
+        </FormItem>
+    );
+};
+
 
 export function ProductForm({ onSubmit, initialData, submitButtonText = "Create Product" }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
@@ -266,9 +363,11 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                                 <FormField control={form.control} name={`exercises.${index}.name`} render={({ field }) => (
                                     <FormItem><FormLabel>Exercise Name</FormLabel><FormControl><Input placeholder="Push-ups" {...field}/></FormControl><FormMessage /></FormItem>
                                 )}/>
-                                 <FormField control={form.control} name={`exercises.${index}.videoOrDescription`} render={({ field }) => (
-                                    <FormItem><FormLabel>Video URL or Description</FormLabel><FormControl><Textarea placeholder="Link to video or text description..." {...field}/></FormControl><FormMessage /></FormItem>
+                                
+                                <FormField control={form.control} name={`exercises.${index}.videoOrDescription`} render={({ field }) => (
+                                    <VideoUploader field={field} form={form} index={index} />
                                 )}/>
+
                                 <div className="grid grid-cols-4 gap-2">
                                     <FormField control={form.control} name={`exercises.${index}.sets`} render={({ field }) => (
                                         <FormItem><FormLabel>Sets</FormLabel><FormControl><Input type="number" placeholder="3" {...field}/></FormControl><FormMessage /></FormItem>
@@ -349,7 +448,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
         <Separator/>
 
         <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting && <Trash2 className="mr-2 h-4 w-4 animate-spin" />}
+            {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitButtonText}
         </Button>
       </form>

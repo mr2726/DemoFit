@@ -32,9 +32,22 @@ interface WorkoutPlan {
 }
 
 const getYoutubeVideoId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            return urlObj.pathname.slice(1);
+        }
+        if (urlObj.hostname.includes('youtube.com')) {
+            const videoId = urlObj.searchParams.get('v');
+            if (videoId) return videoId;
+        }
+    } catch (e) {
+        // Fallback for non-URL strings
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+    return null;
 };
 
 const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: WorkoutPlan }) => {
@@ -49,10 +62,8 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
         setVideoId(id);
     }, [source]);
 
-    // Check if it's a likely video URL
-    const isVideo = source.startsWith('http') && (source.includes('youtube.com') || source.includes('youtu.be') || source.includes('vimeo.com'));
-    
-    if (isVideo && videoId) {
+    // Check if it's a YouTube video
+    if (videoId) {
         const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
         return (
             <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center group">
@@ -71,7 +82,7 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
                     </>
                 ) : (
                     <ReactPlayer
-                        url={source}
+                        url={`https://www.youtube.com/watch?v=${videoId}`}
                         width="100%"
                         height="100%"
                         controls={true}
@@ -83,6 +94,23 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
         );
     }
     
+    // Check if it's another video URL (like R2)
+    if (source.startsWith('http') && (source.endsWith('.mp4') || source.endsWith('.mov') || source.endsWith('.webm'))) {
+        return (
+             <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center group">
+                 <ReactPlayer
+                    url={source}
+                    width="100%"
+                    height="100%"
+                    controls={true}
+                    playing={true}
+                    className="absolute top-0 left-0"
+                />
+            </div>
+        )
+    }
+
+    // Check if it's an image URL
     if (source.startsWith('http')) {
         return (
             <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center relative">
@@ -96,6 +124,7 @@ const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: Wor
         );
     }
 
+    // Otherwise, it's a text description
     return (
          <div className="w-full aspect-video bg-muted rounded-lg flex flex-col items-center justify-center p-4">
             <FileText className="w-16 h-16 text-muted-foreground mb-4"/>
