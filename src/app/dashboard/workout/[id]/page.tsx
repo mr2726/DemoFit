@@ -11,6 +11,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 
 interface Exercise {
     id: string;
@@ -30,25 +31,54 @@ interface WorkoutPlan {
     exercises: Exercise[];
 }
 
+const getYoutubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
+
 const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: WorkoutPlan }) => {
     const source = exercise?.videoOrDescription || workout.imageUrl || "https://placehold.co/1280x720";
-    
+    const [showVideo, setShowVideo] = useState(false);
+    const [videoId, setVideoId] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Reset state when exercise changes
+        setShowVideo(false);
+        const id = getYoutubeVideoId(source);
+        setVideoId(id);
+    }, [source]);
+
     // Check if it's a likely video URL
     const isVideo = source.startsWith('http') && (source.includes('youtube.com') || source.includes('youtu.be') || source.includes('vimeo.com'));
-
-    if (isVideo) {
-         return (
-            <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center">
-                <ReactPlayer
-                    url={source}
-                    width="100%"
-                    height="100%"
-                    controls={false} // Use custom controls if needed, or true for default
-                    playing={true}
-                    light={true} // Shows thumbnail, loads player on click
-                    playIcon={<PlayCircleIcon className="w-20 h-20 text-white/80 transition-transform group-hover:scale-110" />}
-                    className="absolute top-0 left-0"
-                />
+    
+    if (isVideo && videoId) {
+        const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+        return (
+            <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center group">
+                {!showVideo ? (
+                    <>
+                        <Image
+                            src={thumbnailUrl}
+                            alt={exercise?.name || workout.name}
+                            layout="fill"
+                            objectFit="cover"
+                            className="transition-transform group-hover:scale-105"
+                        />
+                        <button onClick={() => setShowVideo(true)} className="absolute z-10 text-white">
+                            <PlayCircleIcon className="w-20 h-20 text-white/80 transition-transform group-hover:scale-110 drop-shadow-lg" />
+                        </button>
+                    </>
+                ) : (
+                    <ReactPlayer
+                        url={source}
+                        width="100%"
+                        height="100%"
+                        controls={true}
+                        playing={true}
+                        className="absolute top-0 left-0"
+                    />
+                )}
             </div>
         );
     }
