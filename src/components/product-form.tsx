@@ -28,7 +28,7 @@ const exerciseSchema = z.object({
     name: z.string().min(1, "Exercise name is required."),
     videoOrDescription: z.string().min(1, "Video link or description is required."),
     sets: z.coerce.number().int().min(1),
-    reps: z.string().optional(),
+    reps: z.string().optional().or(z.literal('')),
     duration: z.coerce.number().int().min(0).optional(),
     rest: z.coerce.number().int().min(0),
 });
@@ -105,6 +105,7 @@ const defaultValues: Partial<ProductFormValues> = {
   description: "",
   price: 0,
   category: "Workout Plan",
+  imageUrl: "",
   stock: 0,
   weeks: 4,
   totalKcal: 2000,
@@ -145,12 +146,15 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
 
             if (!response.ok) {
                 const contentType = response.headers.get("content-type");
+                let errorData = { error: 'Server error occurred.' };
                 if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Server error occurred.');
+                    errorData = await response.json();
                 } else {
-                    throw new Error('Upload failed. The server did not respond correctly. Check server logs.');
+                    const text = await response.text();
+                    console.error("Non-JSON error response:", text);
+                    errorData.error = 'Upload failed. The server did not respond correctly. Check server logs.'
                 }
+                throw new Error(errorData.error);
             }
             
             const { url } = await response.json();
@@ -200,13 +204,13 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
 export function ProductForm({ onSubmit, initialData, submitButtonText = "Create Product" }: ProductFormProps) {
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: initialData || defaultValues,
+    defaultValues: initialData ? { ...defaultValues, ...initialData } : defaultValues,
     mode: "onChange",
   })
   
   React.useEffect(() => {
     if (initialData) {
-        form.reset(initialData);
+        form.reset({ ...defaultValues, ...initialData });
     }
   }, [initialData, form]);
 
@@ -363,7 +367,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                                         <FormItem><FormLabel>Sets</FormLabel><FormControl><Input type="number" placeholder="3" {...field}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`exercises.${index}.reps`} render={({ field }) => (
-                                        <FormItem><FormLabel>Reps</FormLabel><FormControl><Input placeholder="12" {...field}/></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>Reps</FormLabel><FormControl><Input placeholder="12" {...field} value={field.value ?? ''}/></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField control={form.control} name={`exercises.${index}.duration`} render={({ field }) => (
                                         <FormItem><FormLabel>Work (sec)</FormLabel><FormControl><Input type="number" placeholder="45" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>
@@ -377,7 +381,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                         </Card>
                     ))}
                     </div>
-                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendExercise({ name: '', videoOrDescription: '', sets: 3, rest: 60 })}>
+                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendExercise({ name: '', videoOrDescription: '', sets: 3, reps: '', duration: 0, rest: 60 })}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Exercise
                     </Button>
                 </div>
@@ -428,7 +432,7 @@ export function ProductForm({ onSubmit, initialData, submitButtonText = "Create 
                         </Card>
                     ))}
                     </div>
-                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendRecipe({ name: '', instructions: '' })}>
+                    <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendRecipe({ name: '', instructions: '', imageUrl: '', kcal: 0 })}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Recipe
                     </Button>
                 </div>

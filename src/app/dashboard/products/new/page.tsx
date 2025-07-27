@@ -1,3 +1,4 @@
+
 'use client';
 import { ProductForm } from '@/components/product-form';
 import { useRouter } from 'next/navigation';
@@ -6,23 +7,13 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { ProductFormValues } from '@/components/product-form';
 
-const cleanData = (data: ProductFormValues) => {
-    const cleanedData: Partial<ProductFormValues> = {};
-    for (const key in data) {
-        const value = (data as any)[key];
-        cleanedData[key as keyof ProductFormValues] = value === undefined ? null : value;
-    }
-    return cleanedData;
-};
-
 export default function NewProductPage() {
     const router = useRouter();
     const { toast } = useToast();
 
     const handleFormSubmit = async (data: ProductFormValues) => {
         try {
-            const cleaned = cleanData(data);
-            await addDoc(collection(db, "products"), cleaned);
+            await addDoc(collection(db, "products"), data);
             toast({
                 title: "Success",
                 description: "Product created successfully."
