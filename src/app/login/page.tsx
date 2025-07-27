@@ -260,7 +260,6 @@ export default function LoginPage() {
                             )}
                             Login with Google
                         </Button>
-                         <Button variant="secondary" asChild type="button"><Link href="/dashboard">Continue as Guest</Link></Button>
                     </div>
                 </CardContent>
             </Card>
