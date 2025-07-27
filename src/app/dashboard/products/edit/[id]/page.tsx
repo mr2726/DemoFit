@@ -8,6 +8,15 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
+const cleanData = (data: ProductFormValues): Partial<ProductFormValues> => {
+    const cleanedData: Partial<ProductFormValues> = {};
+    for (const key in data) {
+        const value = (data as any)[key];
+        cleanedData[key as keyof ProductFormValues] = value === undefined ? null : value;
+    }
+    return cleanedData;
+};
+
 export default function EditProductPage() {
     const params = useParams();
     const id = params.id as string;
@@ -52,7 +61,8 @@ export default function EditProductPage() {
     const handleFormSubmit = async (data: ProductFormValues) => {
         try {
             const docRef = doc(db, "products", id);
-            await updateDoc(docRef, data);
+            const cleaned = cleanData(data);
+            await updateDoc(docRef, cleaned);
             toast({
                 title: "Success",
                 description: "Product updated successfully."
