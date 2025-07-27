@@ -138,19 +138,23 @@ const VideoUploader = ({ field, form, index }: { field: any, form: any, index: n
             const formData = new FormData();
             formData.append('file', file);
             
-            // Using fetch to simulate progress is complex. We'll show a loading spinner.
             const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
-            
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server error occurred.');
+                } else {
+                    throw new Error('Upload failed. The server did not respond correctly. Check server logs.');
+                }
             }
             
             const { url } = await response.json();
-            form.setValue(`exercises.${index}.videoOrDescription`, url);
+            form.setValue(`exercises.${index}.videoOrDescription`, url, { shouldValidate: true });
             toast({ title: "Success", description: "Video uploaded successfully." });
 
         } catch (error: any) {
