@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, SkipForward, Repeat, CheckCircle2, Loader2, FileText, PlayCircleIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import Image from 'next/image';
+import ReactPlayer from 'react-player/lazy';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -30,51 +30,25 @@ interface WorkoutPlan {
     exercises: Exercise[];
 }
 
-const getYoutubeVideoId = (url: string) => {
-    try {
-        const urlObj = new URL(url);
-        if (urlObj.hostname === 'youtu.be') {
-            return urlObj.pathname.slice(1);
-        }
-        if (urlObj.hostname.includes('youtube.com')) {
-            return urlObj.searchParams.get('v');
-        }
-    } catch (e) {
-        // Not a valid URL
-    }
-    return null;
-}
-
 const MediaDisplay = ({ exercise, workout }: { exercise?: Exercise, workout: WorkoutPlan }) => {
     const source = exercise?.videoOrDescription || workout.imageUrl || "https://placehold.co/1280x720";
-    const videoId = getYoutubeVideoId(source);
-    const [playVideo, setPlayVideo] = useState(false);
+    
+    // Check if it's a likely video URL
+    const isVideo = source.startsWith('http') && (source.includes('youtube.com') || source.includes('youtu.be') || source.includes('vimeo.com'));
 
-    useEffect(() => {
-        setPlayVideo(false);
-    }, [exercise]);
-
-    if (videoId) {
-        const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-        return (
-            <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black">
-                {playVideo ? (
-                    <iframe
-                        className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                        title="YouTube video player"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    ></iframe>
-                ) : (
-                    <button onClick={() => setPlayVideo(true)} className="w-full h-full flex items-center justify-center cursor-pointer group">
-                        <img src={thumbnailUrl} alt={exercise?.name || 'Exercise video thumbnail'} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <PlayCircleIcon className="w-20 h-20 text-white/80 transition-transform group-hover:scale-110" />
-                        </div>
-                    </button>
-                )}
+    if (isVideo) {
+         return (
+            <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-black flex items-center justify-center">
+                <ReactPlayer
+                    url={source}
+                    width="100%"
+                    height="100%"
+                    controls={false} // Use custom controls if needed, or true for default
+                    playing={true}
+                    light={true} // Shows thumbnail, loads player on click
+                    playIcon={<PlayCircleIcon className="w-20 h-20 text-white/80 transition-transform group-hover:scale-110" />}
+                    className="absolute top-0 left-0"
+                />
             </div>
         );
     }
